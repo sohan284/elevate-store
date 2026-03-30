@@ -90,9 +90,11 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #3b82f6; /* Lighter primary for dark mode */
+  --primary: #3b82f6;
+  /* Lighter primary for dark mode */
   --primary-foreground: #ffffff;
-  --secondary: #e879f9; /* Lighter secondary for dark mode */
+  --secondary: #e879f9;
+  /* Lighter secondary for dark mode */
   --secondary-foreground: #ffffff;
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);

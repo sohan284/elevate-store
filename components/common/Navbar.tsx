@@ -1,35 +1,39 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Search, MapPin, User, Heart, ShoppingCart, Menu } from "lucide-react";
+import MobileMenu from "@/components/common/MobileMenu";
 
 export default function Navbar() {
   return (
-    <nav className="w-full bg-white border-b border-gray-100">
+    <nav className="w-full border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* flex-wrap ensures search drops to next line on mobile */}
         <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2 lg:gap-8">
 
-          {/* Logo Section */}
-          <Link href="/" className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Custom Asset Logo */}
-            <div className="relative flex items-center justify-center p-1 transform scale-90 sm:scale-100">
-              <Image
-                src="/assets/logo.png"
-                alt="Elevate Store Logo"
-                width={60}
-                height={60}
-                className="object-cover"
-                priority
-              />
-            </div>
-            <div className="flex flex-col ml-1 tracking-wider font-bold leading-none">
-              <div className="flex items-start">
-                <span className="text-xl sm:text-[22px] bg-linear-to-r from-primary to-secondary text-transparent bg-clip-text">ELEVATE</span>
-                <span className="text-[10px] text-gray-500 font-normal leading-none ml-[2px] mt-1">®</span>
+          {/* Brand/Logo Section with Mobile Menu */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <MobileMenu />
+            <Link href="/" className="flex items-center gap-1 sm:gap-2 shrink-0">
+              {/* Custom Asset Logo */}
+              <div className="relative flex items-center justify-center p-1 transform scale-90 sm:scale-100">
+                <Image
+                  src="/assets/logo.png"
+                  alt="Elevate Store Logo"
+                  width={60}
+                  height={60}
+                  className="object-cover"
+                  priority
+                />
               </div>
-              <span className="text-xl sm:text-[22px] -mt-1 bg-linear-to-r from-primary to-secondary text-transparent bg-clip-text">STORE</span>
-            </div>
-          </Link>
+              <div className="flex flex-col ml-1 tracking-wider font-bold leading-none">
+                <div className="flex items-start">
+                  <span className="text-xl sm:text-[22px] bg-linear-to-r from-primary to-secondary text-transparent bg-clip-text">ELEVATE</span>
+                  <span className="text-[10px] text-gray-500 font-normal leading-none ml-[2px] mt-1">®</span>
+                </div>
+                <span className="text-xl sm:text-[22px] -mt-1 bg-linear-to-r from-primary to-secondary text-transparent bg-clip-text">STORE</span>
+              </div>
+            </Link>
+          </div>
 
           {/* Action Icons Section - Moves to right, order 2 on mobile, order 3 on desktop */}
           <div className="flex items-center gap-3 sm:gap-5 lg:gap-7 shrink-0 order-2 lg:order-3">
