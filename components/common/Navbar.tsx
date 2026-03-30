@@ -6,7 +6,7 @@ import MobileMenu from "@/components/common/MobileMenu";
 export default function Navbar() {
   return (
     <nav className="w-full border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* flex-wrap ensures search drops to next line on mobile */}
         <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2 lg:gap-8">
 
@@ -43,10 +43,10 @@ export default function Navbar() {
               <span className="text-[10px] sm:text-[12px] font-medium hidden sm:block">Track Order</span>
             </button>
 
-            <button className="hidden sm:flex flex-col items-center gap-1.5 text-gray-800 hover:text-primary group transition-colors">
+            <Link href="/signin" className="hidden sm:flex flex-col items-center gap-1.5 text-gray-800 hover:text-primary group transition-colors">
               <User size={24} strokeWidth={1.5} className="group-hover:text-primary group-hover:-translate-y-0.5 transition-transform sm:w-[26px] sm:h-[26px]" />
               <span className="text-[10px] sm:text-[12px] font-medium hidden sm:block">Sign In</span>
-            </button>
+            </Link>
 
             <button className="hidden md:flex flex-col items-center gap-1.5 text-gray-800 hover:text-primary group transition-colors">
               <Heart size={24} strokeWidth={1.5} className="group-hover:text-primary group-hover:-translate-y-0.5 transition-transform sm:w-[26px] sm:h-[26px]" />

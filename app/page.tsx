@@ -28,7 +28,7 @@ export default function Home() {
         <HeroBanner />
         <FeaturedCategories />
         <TopSelling />
-        <ProductSlider title="All Natural Honey" products={honeyProducts} />
+        <ProductSlider title="All Natural Honey" products={honeyProducts} viewAllLink="/category/honey" />
         <OurBrands />
         <ProductSlider title="Premium Dates Collection" products={datesProducts} viewAllLink="/category/dates" />
       </main>
