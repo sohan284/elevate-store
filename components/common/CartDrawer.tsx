@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ShoppingBag, ArrowRight, Minus, Plus, Trash2, ShoppingCart as ShoppingCartIcon } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 
@@ -121,9 +122,13 @@ export default function CartDrawer() {
               </div>
               
               <div className="space-y-3">
-                <button className="w-full bg-primary text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/95 transition-all shadow-md text-[14px]">
+                <Link 
+                  href="/checkout"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full bg-primary text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/95 transition-all shadow-md text-[14px]"
+                >
                   PROCEED TO CHECKOUT
-                </button>
+                </Link>
                 <button 
                   onClick={() => setIsOpen(false)}
                   className="w-full bg-white border border-gray-200 text-[#2D333A] font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all text-[14px]"
