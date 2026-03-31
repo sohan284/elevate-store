@@ -61,37 +61,37 @@ export default function TopSelling() {
             <div key={product.id} className="bg-white rounded-lg p-5 sm:p-7 shadow-[0_2px_15px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-row items-center relative overflow-hidden group border border-transparent hover:border-primary/30">
 
               {/* Top Right Tag */}
-              <div className="absolute top-0 right-0 bg-[#FF4F33] text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-bl-lg flex items-center gap-1.5 z-10 shadow-sm">
+              <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-bl-lg flex items-center gap-1.5 z-10 border-b border-l border-primary/10">
                 {product.tagIcon === 'tag' ? (
-                  <Tag size={12} fill="currentColor" />
+                  <Tag size={12} fill="currentColor" strokeWidth={3} />
                 ) : (
-                  <Flame size={12} fill="currentColor" />
+                  <Flame size={12} fill="currentColor" strokeWidth={3} />
                 )}
                 {product.tag}
               </div>
 
               {/* Product Image Placeholder (approx 40%) */}
               <div className="w-[110px] sm:w-[160px] lg:w-[180px] shrink-0 flex items-center justify-center mr-4 sm:mr-6 group-hover:scale-105 transition-transform duration-500 relative">
-                <span className="text-7xl sm:text-8xl lg:text-9xl drop-shadow-xl">{product.image}</span>
+                <span className="text-7xl sm:text-8xl lg:text-9xl drop-shadow-lg opacity-90">{product.image}</span>
               </div>
 
               {/* Product Details (approx 60%) */}
               <div className="flex-1 flex flex-col justify-center">
-                <h3 className="text-[#3b4148] font-bold text-base sm:text-lg mb-1 lg:mb-2 leading-tight">
+                <h3 className="text-[#2D333A] font-bold text-base sm:text-[17px] mb-1 lg:mb-2 leading-tight group-hover:text-primary transition-colors">
                   {product.name}
                 </h3>
 
-                <div className="flex flex-wrap items-center gap-2 mb-2 lg:mb-3">
+                <div className="flex flex-wrap items-center gap-2 mb-2 lg:mb-2.5">
                   <span className="text-primary font-bold text-lg sm:text-[22px] leading-none">
                     ৳{product.currentPrice.toLocaleString()}
                   </span>
-                  <span className="text-[#888888] line-through text-[15px] sm:text-base font-medium leading-none">
+                  <span className="text-gray-400 line-through text-[14px] sm:text-[15px] font-medium leading-none">
                     ৳{product.originalPrice.toLocaleString()}
                   </span>
                 </div>
 
                 <div className="mb-5 lg:mb-6">
-                  <span className="inline-block bg-[#AEE12C] text-[#3c5000] text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-[4px]">
+                  <span className="inline-block bg-blue-50 text-primary text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md border border-primary/10">
                     {product.saveText}
                   </span>
                 </div>
@@ -105,7 +105,7 @@ export default function TopSelling() {
                       price: product.currentPrice,
                       image: product.image,
                     })}
-                    className="flex-1 flex items-center justify-center gap-1.5 border-[1.5px] border-primary text-primary hover:bg-primary/10 px-3 py-2 rounded-md text-[13px] sm:text-[14px] font-bold transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 border-[1.5px] border-primary/20 text-primary hover:bg-primary/5 px-3 py-2.5 rounded-md text-[13px] sm:text-[14px] font-bold transition-all active:scale-[0.98]"
                   >
                     <ShoppingCart size={16} strokeWidth={2.5} />
                     Add To Cart
@@ -117,7 +117,7 @@ export default function TopSelling() {
                       price: product.currentPrice,
                       image: product.image,
                     })}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-white hover:bg-primary/90 px-3 py-2 rounded-md text-[13px] sm:text-[14px] font-bold transition-colors shadow-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-white hover:bg-primary/90 px-3 py-2.5 rounded-md text-[13px] sm:text-[14px] font-bold transition-all shadow-md shadow-primary/10 active:scale-[0.98]"
                   >
                     <ShoppingCart size={16} strokeWidth={2} fill="currentColor" />
                     Buy now
