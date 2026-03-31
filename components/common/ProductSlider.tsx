@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import Link from "next/link";
 import { ArrowRight, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 export interface Product {
   id: string | number;
@@ -24,6 +25,8 @@ interface ProductSliderProps {
 }
 
 export default function ProductSlider({ title, viewAllLink = "#", products }: ProductSliderProps) {
+  const addItem = useCartStore((state) => state.addItem);
+
   return (
     <section className="w-full py-8 lg:py-10">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -97,7 +100,18 @@ export default function ProductSlider({ title, viewAllLink = "#", products }: Pr
                       )}
                     </div>
 
-                    <button className="w-full flex items-center justify-center gap-2 border-[1.5px] border-primary text-primary hover:bg-primary hover:text-white px-3 py-2.5 rounded-md text-[13px] sm:text-[14px] font-bold transition-all duration-300">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addItem({
+                          id: product.id,
+                          name: product.name,
+                          price: product.currentPrice,
+                          image: product.image,
+                        });
+                      }}
+                      className="w-full flex items-center justify-center gap-2 border-[1.5px] border-primary text-primary hover:bg-primary hover:text-white px-3 py-2.5 rounded-md text-[13px] sm:text-[14px] font-bold transition-all duration-300"
+                    >
                       <ShoppingCart size={16} strokeWidth={2.5} />
                       Add To Cart
                     </button>

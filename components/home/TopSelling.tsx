@@ -1,8 +1,11 @@
 "use client";
 
 import { ShoppingCart, Tag, Flame } from "lucide-react";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 export default function TopSelling() {
+  const addItem = useCartStore((state) => state.addItem);
+  
   const products = [
     {
       id: 1,
@@ -95,11 +98,27 @@ export default function TopSelling() {
 
                 {/* Call to Actions */}
                 <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full max-w-[320px]">
-                  <button className="flex-1 flex items-center justify-center gap-1.5 border-[1.5px] border-primary text-primary hover:bg-primary/10 px-3 py-2 rounded-md text-[13px] sm:text-[14px] font-bold transition-colors">
+                  <button 
+                    onClick={() => addItem({
+                      id: product.id,
+                      name: product.name,
+                      price: product.currentPrice,
+                      image: product.image,
+                    })}
+                    className="flex-1 flex items-center justify-center gap-1.5 border-[1.5px] border-primary text-primary hover:bg-primary/10 px-3 py-2 rounded-md text-[13px] sm:text-[14px] font-bold transition-colors"
+                  >
                     <ShoppingCart size={16} strokeWidth={2.5} />
                     Add To Cart
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-white hover:bg-primary/90 px-3 py-2 rounded-md text-[13px] sm:text-[14px] font-bold transition-colors shadow-sm">
+                  <button 
+                    onClick={() => addItem({
+                      id: product.id,
+                      name: product.name,
+                      price: product.currentPrice,
+                      image: product.image,
+                    })}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-white hover:bg-primary/90 px-3 py-2 rounded-md text-[13px] sm:text-[14px] font-bold transition-colors shadow-sm"
+                  >
                     <ShoppingCart size={16} strokeWidth={2} fill="currentColor" />
                     Buy now
                   </button>

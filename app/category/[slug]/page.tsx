@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { use } from "react";
 import { ChevronRight, Minus, Plus, SlidersHorizontal, X, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 // ─── Category Data Registry ───────────────────────────────────────────────────
 type Product = {
@@ -164,6 +165,7 @@ const VIEW_OPTIONS = [
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const addItem = useCartStore((state) => state.addItem);
 
   const category: CategoryConfig = categoryData[slug] ?? {
     title: slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -396,7 +398,16 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
                       )}
                     </div>
                     <button
-                      onClick={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addItem({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.image,
+                        });
+                      }}
                       className="w-full flex items-center justify-center gap-2 border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold py-2 rounded-[7px] transition-all text-[13px]"
                     >
                       <ShoppingCart size={14} strokeWidth={2} />

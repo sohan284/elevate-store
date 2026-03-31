@@ -13,6 +13,8 @@ import {
   MessageCircle,
   Phone,
 } from "lucide-react";
+import ProductReviews from "@/components/product/ProductReviews";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 // ─── Mock product data ───────────────────────────────────────────
 const product = {
@@ -47,6 +49,17 @@ export default function ProductDetailsPage() {
 
   const handleDecrement = () => setQuantity((q) => Math.max(1, q - 1));
   const handleIncrement = () => setQuantity((q) => q + 1);
+
+  const addItem = useCartStore((state) => state.addItem);
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.sku, // using SKU as ID for now
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+    }, quantity);
+  };
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
@@ -148,7 +161,10 @@ export default function ProductDetailsPage() {
 
               {/* Action Buttons */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <button className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-[8px] transition-colors shadow-sm text-[14px]">
+                <button 
+                  onClick={handleAddToCart}
+                  className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-[8px] transition-colors shadow-sm text-[14px]"
+                >
                   <ShoppingCart size={17} strokeWidth={2} />
                   ADD TO CART
                 </button>
@@ -224,15 +240,7 @@ export default function ProductDetailsPage() {
                   </ul>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="flex gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} size={28} className="text-gray-200 fill-gray-200" />
-                    ))}
-                  </div>
-                  <p className="text-gray-500 text-[14px] font-medium">No reviews yet.</p>
-                  <p className="text-gray-400 text-[13px] mt-1">Be the first to review this product!</p>
-                </div>
+                <ProductReviews />
               )}
             </div>
           </div>
