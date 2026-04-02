@@ -40,7 +40,7 @@ export default function FeaturedCategories() {
                   href={`/category/${cat.slug}`}
                   className="flex flex-col items-center group/item h-full"
                 >
-                  <div className="w-full aspect-square bg-white rounded-[20px] sm:rounded-[24px] flex items-center justify-center p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 border border-transparent hover:border-primary/30">
+                  <div className="w-full aspect-square bg-white rounded-[20px] sm:rounded-lg flex items-center justify-center p-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] transition-all duration-300 border border-transparent hover:border-primary/30">
                     <span className="text-5xl md:text-6xl drop-shadow-sm group-hover/item:scale-110 transition-transform duration-300">
                       {cat.icon}
                     </span>

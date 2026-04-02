@@ -84,7 +84,7 @@ export default function HeroBanner() {
                   <div className="absolute top-[40%] right-[10%] text-white/40 text-2xl">✧</div>
 
                   {/* Placeholder Content */}
-                  <div className="z-10 text-center px-4 bg-black/10 p-8 rounded-2xl backdrop-blur-sm border border-white/10">
+                  <div className="z-10 text-center px-4 bg-black/10 p-8 rounded-lg backdrop-blur-sm border border-white/10">
                     <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-wide drop-shadow-md">
                       {slide.title}
                     </h2>

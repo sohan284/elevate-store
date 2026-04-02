@@ -65,7 +65,7 @@ export default function CartDrawer() {
             {/* Cart Items List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 group relative">
+                <div key={item.id} className="flex gap-4 p-3 bg-gray-50 rounded-lg border border-gray-100 group relative">
                   {/* Image Placeholder */}
                   <div className="w-20 h-20 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-3xl shrink-0">
                     {item.image.includes('http') ? (
@@ -86,14 +86,14 @@ export default function CartDrawer() {
                     {/* Quantity Selector */}
                     <div className="flex items-center gap-3 mt-2">
                       <div className="flex items-center border border-gray-200 rounded-md bg-white">
-                        <button 
+                        <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-gray-50 transition-colors"
                         >
                           <Minus size={14} />
                         </button>
                         <span className="w-8 text-center text-[13px] font-bold text-gray-800">{item.quantity}</span>
-                        <button 
+                        <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-gray-50 transition-colors"
                         >
@@ -104,7 +104,7 @@ export default function CartDrawer() {
                   </div>
 
                   {/* Remove Button */}
-                  <button 
+                  <button
                     onClick={() => removeItem(item.id)}
                     className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
                   >
@@ -120,22 +120,22 @@ export default function CartDrawer() {
                 <span className="text-gray-500 font-semibold text-[14px]">Subtotal</span>
                 <span className="text-primary font-black text-[18px]">৳{totalPrice.toLocaleString()}</span>
               </div>
-              
+
               <div className="space-y-3">
-                <Link 
+                <Link
                   href="/checkout"
                   onClick={() => setIsOpen(false)}
                   className="w-full bg-primary text-white font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/95 transition-all shadow-md text-[14px]"
                 >
                   PROCEED TO CHECKOUT
                 </Link>
-                <button 
+                <button
                   onClick={() => setIsOpen(false)}
                   className="w-full bg-white border border-gray-200 text-[#2D333A] font-bold py-3.5 rounded-lg flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all text-[14px]"
                 >
                   CONTINUE SHOPPING
                 </button>
-                <button 
+                <button
                   onClick={clearCart}
                   className="w-full text-gray-400 text-[12px] font-medium hover:text-red-500 transition-colors pt-1"
                 >
@@ -159,7 +159,7 @@ export default function CartDrawer() {
             </div>
             <p className="text-[#3b4148] font-bold text-[18px] tracking-wide mb-2">Your cart is empty!</p>
             <p className="text-gray-400 text-[14px] mb-8">Looks like you haven't added anything yet.</p>
-            <button 
+            <button
               onClick={() => setIsOpen(false)}
               className="bg-primary text-white font-bold py-3 px-8 rounded-full hover:shadow-lg transition-all text-sm uppercase tracking-wider"
             >

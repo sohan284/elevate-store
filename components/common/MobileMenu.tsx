@@ -32,9 +32,8 @@ export default function MobileMenu() {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-[300px] max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col overflow-y-auto ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 h-full w-[300px] max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col overflow-y-auto ${isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Close Button */}
         <button
@@ -46,7 +45,7 @@ export default function MobileMenu() {
 
         <div className="p-4 pt-4 flex-1 pb-10">
           {/* User Profile Card */}
-          <div className="bg-primary text-white p-4 rounded-xl flex items-center gap-3 mb-6 relative overflow-hidden">
+          <div className="bg-primary text-white p-4 rounded-lg flex items-center gap-3 mb-6 relative overflow-hidden">
             <div className="w-[46px] h-[46px] bg-white/20 rounded-full flex items-center justify-center shrink-0 border-[1.5px] border-white/30 overflow-hidden">
               <User size={36} className="text-white fill-white mt-2" />
             </div>
@@ -59,7 +58,7 @@ export default function MobileMenu() {
           </div>
 
           {/* Categories List — from shared source */}
-          <div className="bg-[#F6F7F7] rounded-xl overflow-hidden mb-8">
+          <div className="bg-[#F6F7F7] rounded-lg overflow-hidden mb-8">
             <ul className="flex flex-col">
               {featuredCategories.map((cat) => (
                 <li key={cat.slug} className="border-b border-[#E8EAEB] last:border-0 mx-4">
@@ -84,7 +83,7 @@ export default function MobileMenu() {
             </div>
           </div>
 
-          <div className="bg-[#F6F7F7] rounded-xl overflow-hidden">
+          <div className="bg-[#F6F7F7] rounded-lg overflow-hidden">
             <ul className="flex flex-col">
               <li className="mx-4">
                 <Link href="/about" className="flex items-center gap-3.5 py-4 transition-colors text-gray-800" onClick={() => setIsOpen(false)}>

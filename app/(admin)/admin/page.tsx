@@ -2,12 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  DollarSign, 
-  ShoppingBag, 
-  Users, 
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  ShoppingBag,
+  Users,
   Activity,
   MoreVertical,
   ExternalLink
@@ -15,39 +15,39 @@ import {
 import { cn } from "@/lib/utils";
 
 const kpiData = [
-  { 
-    name: "Total Revenue", 
-    value: "৳158,400", 
-    change: "+12.5%", 
-    trend: "up", 
-    icon: DollarSign, 
+  {
+    name: "Total Revenue",
+    value: "৳158,400",
+    change: "+12.5%",
+    trend: "up",
+    icon: DollarSign,
     color: "from-emerald-500 to-teal-600",
     shadow: "shadow-emerald-500/20"
   },
-  { 
-    name: "Total Orders", 
-    value: "1,280", 
-    change: "+5.2%", 
-    trend: "up", 
-    icon: ShoppingBag, 
+  {
+    name: "Total Orders",
+    value: "1,280",
+    change: "+5.2%",
+    trend: "up",
+    icon: ShoppingBag,
     color: "from-blue-500 to-indigo-600",
     shadow: "shadow-blue-500/20"
   },
-  { 
-    name: "Average Order", 
-    value: "৳2,450", 
-    change: "-2.1%", 
-    trend: "down", 
-    icon: Activity, 
+  {
+    name: "Average Order",
+    value: "৳2,450",
+    change: "-2.1%",
+    trend: "down",
+    icon: Activity,
     color: "from-amber-500 to-orange-600",
     shadow: "shadow-amber-500/20"
   },
-  { 
-    name: "Active Customers", 
-    value: "840", 
-    change: "+18.4%", 
-    trend: "up", 
-    icon: Users, 
+  {
+    name: "Active Customers",
+    value: "840",
+    change: "+18.4%",
+    trend: "up",
+    icon: Users,
     color: "from-violet-500 to-purple-600",
     shadow: "shadow-violet-500/20"
   },
@@ -71,13 +71,13 @@ export default function AdminDashboard() {
           <p className="text-[14px] text-gray-500 mt-1 font-medium italic">Welcome back, here's what's happening with your store today.</p>
         </div>
         <div className="flex items-center gap-3">
-          <select className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-[13.5px] font-bold text-gray-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all cursor-pointer">
+          <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-[13.5px] font-bold text-gray-700 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all cursor-pointer">
             <option>Last 7 Days</option>
             <option>Last 30 Days</option>
             <option>This Month</option>
             <option>This Year</option>
           </select>
-          <button className="bg-primary text-white px-5 py-2.5 rounded-xl text-[13.5px] font-bold hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center gap-2">
+          <button className="bg-primary text-white px-5 py-2.5 rounded-lg text-[13.5px] font-bold hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center gap-2">
             Download Report
             <ArrowUpRight size={16} />
           </button>
@@ -87,11 +87,11 @@ export default function AdminDashboard() {
       {/* ── KPI Grid ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiData.map((kpi) => (
-          <div key={kpi.name} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
+          <div key={kpi.name} className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
             <div className={cn("absolute top-0 right-0 w-32 h-32 bg-gradient-to-br opacity-[0.03] -mr-8 -mt-8 rounded-full", kpi.color)} />
-            
+
             <div className="flex items-center justify-between mb-4">
-              <div className={cn("w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg", kpi.color, kpi.shadow)}>
+              <div className={cn("w-12 h-12 rounded-lg bg-gradient-to-br flex items-center justify-center text-white shadow-lg", kpi.color, kpi.shadow)}>
                 <kpi.icon size={22} />
               </div>
               <div className={cn(
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-8">
         {/* ── Sales Analytics Chart Area ──────────────────────── */}
-        <section className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[480px]">
+        <section className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[480px]">
           <div className="p-7 border-b border-gray-50 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-6 bg-primary rounded-full" />
@@ -132,17 +132,17 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
-          
+
           <div className="flex-1 p-8 flex flex-col relative overflow-hidden">
             {/* Mock SVG Chart Rendering */}
             <div className="flex-1 relative flex items-end justify-between gap-2 pt-10">
               {[45, 62, 48, 84, 76, 52, 92, 68, 74, 98, 82, 95].map((val, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center justify-end h-full gap-4 group">
                   <div className="relative w-full flex justify-center">
-                     <span className="absolute -top-8 bg-[#1A1F26] text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">৳{val}k</span>
-                     <div 
-                      className="w-full max-w-[28px] rounded-t-lg bg-gradient-to-t from-primary/80 to-primary group-hover:to-blue-400 transition-all duration-500 shadow-xl shadow-primary/10" 
-                      style={{ height: `${val}%` }} 
+                    <span className="absolute -top-8 bg-[#1A1F26] text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">৳{val}k</span>
+                    <div
+                      className="w-full max-w-[28px] rounded-t-lg bg-gradient-to-t from-primary/80 to-primary group-hover:to-blue-400 transition-all duration-500 shadow-xl shadow-primary/10"
+                      style={{ height: `${val}%` }}
                     />
                   </div>
                   <span className="text-[11.5px] font-bold text-gray-400 uppercase tracking-tighter">
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                   </span>
                 </div>
               ))}
-              
+
               {/* Grid Lines */}
               <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-12 pt-10">
                 {[1, 2, 3, 4, 5].map((_, i) => (
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
         </section>
 
         {/* ── Recent Activity/Orders ──────────────────────────── */}
-        <section className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+        <section className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="p-7 border-b border-gray-50 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-6 bg-amber-500 rounded-full" />
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
               )}>
                 <div className="flex items-center gap-4">
                   <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-[13px] text-white",
+                    "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-[13px] text-white",
                     "bg-gradient-to-br from-slate-700 to-slate-900"
                   )}>
                     {order.customer.charAt(0)}
@@ -210,23 +210,23 @@ export default function AdminDashboard() {
 
           {/* Quick Stats Summary Footer */}
           <div className="p-6 bg-[#1A1F26] text-white rounded-t-3xl mt-auto">
-             <div className="flex items-center justify-between mb-4">
-               <span className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Active Store Statistics</span>
-               <div className="flex items-center gap-1.5 text-emerald-400 animate-pulse">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                 <span className="text-[10px] font-black uppercase tracking-widest leading-none">Live</span>
-               </div>
-             </div>
-             <div className="grid grid-cols-2 gap-4">
-               <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                 <p className="text-[11px] font-bold text-gray-500 uppercase">Items Sold Today</p>
-                 <h5 className="text-xl font-black mt-1 tracking-tight">242</h5>
-               </div>
-               <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                 <p className="text-[11px] font-bold text-gray-500 uppercase">New Signups</p>
-                 <h5 className="text-xl font-black mt-1 tracking-tight">18 <span className="text-[10px] text-primary">+3</span></h5>
-               </div>
-             </div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Active Store Statistics</span>
+              <div className="flex items-center gap-1.5 text-emerald-400 animate-pulse">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest leading-none">Live</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                <p className="text-[11px] font-bold text-gray-500 uppercase">Items Sold Today</p>
+                <h5 className="text-xl font-black mt-1 tracking-tight">242</h5>
+              </div>
+              <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                <p className="text-[11px] font-bold text-gray-500 uppercase">New Signups</p>
+                <h5 className="text-xl font-black mt-1 tracking-tight">18 <span className="text-[10px] text-primary">+3</span></h5>
+              </div>
+            </div>
           </div>
         </section>
       </div>
