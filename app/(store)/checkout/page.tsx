@@ -130,7 +130,7 @@ export default function CheckoutPage() {
                           <span className="text-[14px] font-bold text-[#3b4148]">৳{(item.price * item.quantity).toLocaleString()}.00</span>
                         </div>
                       </div>
-                      <button onClick={() => removeItem(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">
+                      <button onClick={() => removeItem(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-800 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-800 hover:text-white">
                         <Trash2 size={15} />
                       </button>
                     </div>

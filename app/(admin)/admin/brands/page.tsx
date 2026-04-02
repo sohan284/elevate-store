@@ -11,16 +11,21 @@ import {
   CheckCircle2,
   X,
   Store,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminStore, Brand } from "@/lib/store/admin-store";
+import { CustomModal } from "@/components/common/CustomModal";
+import { Button } from "@/components/ui/button";
 
 export default function AdminBrands() {
   const { brands, addBrand, updateBrand, deleteBrand } = useAdminStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [newBrand, setNewBrand] = useState({ name: "", logo: "🏭" });
+  const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
 
   const filteredBrands = brands.filter(brand =>
     brand.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -34,6 +39,14 @@ export default function AdminBrands() {
     });
     setNewBrand({ name: "", logo: "🏭" });
     setIsAddModalOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    if (brandToDelete) {
+      deleteBrand(brandToDelete.id);
+      setIsDeleteModalOpen(false);
+      setBrandToDelete(null);
+    }
   };
 
   return (
@@ -94,7 +107,10 @@ export default function AdminBrands() {
                   Edit
                 </button>
                 <button
-                  onClick={() => deleteBrand(brand.id)}
+                  onClick={() => {
+                    setBrandToDelete(brand);
+                    setIsDeleteModalOpen(true);
+                  }}
                   className="bg-rose-50 hover:bg-rose-100 text-rose-500 p-2.5 rounded-lg transition-colors"
                 >
                   <Trash2 size={16} />
@@ -111,53 +127,81 @@ export default function AdminBrands() {
       </div>
 
       {/* ── Add Brand Modal ───────────────────────────────────── */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[32px] w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-8">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-black text-gray-900">Add New <span className="text-primary italic">Brand</span></h2>
-                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
+      <CustomModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Add New Brand"
+        maxWidth="max-w-sm"
+      >
+        <form onSubmit={handleAddBrand} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Brand Logo (Emoji/Char)</label>
+            <input
+              required
+              type="text"
+              placeholder="🏭, 🍎, Nestle..."
+              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
+              value={newBrand.logo}
+              onChange={(e) => setNewBrand({ ...newBrand, logo: e.target.value })}
+            />
+          </div>
 
-              <form onSubmit={handleAddBrand} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Brand Logo (Emoji/Char)</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="🏭, 🍎, Nestle..."
-                    className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
-                    value={newBrand.logo}
-                    onChange={(e) => setNewBrand({ ...newBrand, logo: e.target.value })}
-                  />
-                </div>
+          <div className="space-y-2">
+            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Brand Name</label>
+            <input
+              required
+              type="text"
+              placeholder="e.g. Pran, Fresh, Bashundhara..."
+              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
+              value={newBrand.name}
+              onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })}
+            />
+          </div>
 
-                <div className="space-y-2">
-                  <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Brand Name</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="e.g. Pran, Fresh, Bashundhara..."
-                    className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
-                    value={newBrand.name}
-                    onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })}
-                  />
-                </div>
+          <div className="pt-2">
+            <button type="submit" className="w-full bg-primary text-white py-4 rounded-lg font-black text-[15px] hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+              <CheckCircle2 size={20} strokeWidth={2.5} />
+              Create Brand
+            </button>
+          </div>
+        </form>
+      </CustomModal>
 
-                <div className="pt-2">
-                  <button type="submit" className="w-full bg-primary text-white py-4 rounded-lg font-black text-[15px] hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                    <CheckCircle2 size={20} strokeWidth={2.5} />
-                    Create Brand
-                  </button>
-                </div>
-              </form>
-            </div>
+      {/* ── Delete Confirmation Modal ───────────────────────── */}
+      <CustomModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Deletion"
+        variant="danger"
+        maxWidth="max-w-sm"
+      >
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-2">
+            <AlertTriangle size={24} />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Are you sure?</h3>
+            <p className="text-[14px] text-gray-500 font-medium mt-1">
+              You are about to delete <span className="text-rose-600 font-bold underline">"{brandToDelete?.name}"</span>.
+              This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex w-full gap-3 pt-2">
+            <Button
+              variant='outline'
+              onClick={() => setIsDeleteModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant='danger'
+              onClick={handleConfirmDelete}
+            >
+              Confirm Delete
+            </Button>
           </div>
         </div>
-      )}
+      </CustomModal>
     </div>
   );
 }

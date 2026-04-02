@@ -106,7 +106,7 @@ export default function CartDrawer() {
                   {/* Remove Button */}
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-800 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -137,7 +137,7 @@ export default function CartDrawer() {
                 </button>
                 <button
                   onClick={clearCart}
-                  className="w-full text-gray-400 text-[12px] font-medium hover:text-red-500 transition-colors pt-1"
+                  className="w-full text-gray-400 text-[12px] font-medium hover:text-red-800 transition-colors pt-1"
                 >
                   Clear all items
                 </button>

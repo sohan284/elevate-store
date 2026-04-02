@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils";
 
 const sidebarItems = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { 
-    name: "Catalog", 
+  {
+    name: "Catalog",
     icon: Package,
     children: [
       { name: "Products", href: "/admin/products", icon: Package },
@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* User Section Bottom */}
           <div className="p-6 border-t border-white/5 bg-black/10">
-            <button className="flex items-center gap-4 px-5 py-3 w-full text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10">
+            <button className="flex items-center gap-4 px-5 py-3 w-full text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-800/10">
               <LogOut size={18} />
               <span className="text-[14.5px] font-semibold">Sign Out</span>
             </button>
@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Notification Badge */}
             <button className="relative p-2.5 rounded-lg text-gray-500 hover:bg-gray-50 hover:text-primary transition-all">
               <Bell size={22} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-800 rounded-full border-2 border-white animate-pulse" />
             </button>
 
             {/* Profile */}
@@ -167,8 +167,8 @@ function SidebarItem({ item, pathname }: { item: any, pathname: string }) {
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center gap-4 px-5 py-3.5 w-full rounded-xl transition-all duration-300 group text-[14.5px] font-bold uppercase tracking-widest",
-          isActive 
-            ? "text-primary bg-primary/5" 
+          isActive
+            ? "text-primary bg-primary/5"
             : "text-gray-400 hover:bg-white/5 hover:text-white"
         )}
       >
