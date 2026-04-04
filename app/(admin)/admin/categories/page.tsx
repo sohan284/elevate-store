@@ -5,70 +5,144 @@ import {
   Plus,
   Search,
   Grid2X2,
-  MoreVertical,
   Edit3,
   Trash2,
   ChevronRight,
-  LayoutGrid,
   Layers,
   CheckCircle2,
   X,
   AlertTriangle,
+  Loader2,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminStore, Category, Subcategory } from "@/lib/store/admin-store";
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/lib/hooks/useCategories";
+import { Category } from "@/lib/services/category-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
 
 export default function AdminCategories() {
-  const { categories, addCategory, updateCategory, deleteCategory, addSubcategory, deleteSubcategory } = useAdminStore();
+  const { data: categoriesResponse, isLoading, isError, error } = useCategories();
+  const createMutation = useCreateCategory();
+  const updateMutation = useUpdateCategory();
+  const deleteMutation = useDeleteCategory();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSubcatModalOpen, setIsSubcatModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [deleteData, setDeleteData] = useState<{ id: string, name: string, type: 'category' | 'subcategory', parentId?: string } | null>(null);
+  const [deleteData, setDeleteData] = useState<{ id: string, name: string } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   // Form States
-  const [newCat, setNewCat] = useState({ name: "", icon: "📦", slug: "" });
-  const [newSubcat, setNewSubcat] = useState({ name: "", slug: "" });
+  const [newCat, setNewCat] = useState<{ name: string, image: File | string, description: string }>({
+    name: "",
+    image: "",
+    description: ""
+  });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const filteredCategories = categories.filter(cat =>
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewCat({ ...newCat, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const filteredCategories = categoriesResponse?.data?.filter(cat =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
 
-  const handleAddCategory = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addCategory({
-      ...newCat,
-      slug: newCat.name.toLowerCase().replace(/ /g, "-")
-    });
-    setNewCat({ name: "", icon: "📦", slug: "" });
+
+    if (editingCategory) {
+      const changedData: Partial<typeof newCat> = {};
+      
+      if (newCat.name !== editingCategory.name) 
+        changedData.name = newCat.name;
+      
+      if (newCat.description !== editingCategory.description) 
+        changedData.description = newCat.description;
+      
+      // Check image change
+      const isNewFile = newCat.image instanceof File;
+      const isImageUrlChanged = typeof newCat.image === 'string' && newCat.image !== editingCategory.image.url;
+      
+      if (isNewFile || isImageUrlChanged) {
+        changedData.image = newCat.image;
+      }
+
+      // Only proceed if there are changes
+      if (Object.keys(changedData).length > 0) {
+        await updateMutation.mutateAsync({
+          id: editingCategory.id,
+          data: changedData
+        });
+      }
+    } else {
+      await createMutation.mutateAsync(newCat);
+    }
+
+    setNewCat({ name: "", image: "", description: "" });
+    setImagePreview(null);
+    setEditingCategory(null);
     setIsAddModalOpen(false);
   };
 
-  const handleAddSubcategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedCategory) {
-      addSubcategory(selectedCategory.id, {
-        ...newSubcat,
-        slug: newSubcat.name.toLowerCase().replace(/ /g, "-")
-      });
-      setNewSubcat({ name: "", slug: "" });
-      setIsSubcatModalOpen(false);
-    }
+  const openAddModal = () => {
+    setEditingCategory(null);
+    setNewCat({ name: "", image: "", description: "" });
+    setImagePreview(null);
+    setIsAddModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const openEditModal = (category: Category) => {
+    setEditingCategory(category);
+    setNewCat({
+      name: category.name,
+      image: category.image.url,
+      description: category.description
+    });
+    setImagePreview(category.image.url);
+    setIsAddModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!deleteData) return;
-    if (deleteData.type === 'category') {
-      deleteCategory(deleteData.id);
-    } else if (deleteData.type === 'subcategory' && deleteData.parentId) {
-      deleteSubcategory(deleteData.parentId, deleteData.id);
-    }
+    await deleteMutation.mutateAsync(deleteData.id);
     setIsDeleteModalOpen(false);
     setDeleteData(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-gray-500 font-medium animate-pulse">Loading categories...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-rose-50 border border-rose-100 p-8 rounded-2xl text-center max-w-2xl mx-auto mt-10">
+        <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={32} />
+        </div>
+        <h2 className="text-xl font-black text-gray-900 mb-2">Failed to Load Categories</h2>
+        <p className="text-gray-600 font-medium mb-6">{(error as any)?.message || "Something went wrong while fetching data from the API."}</p>
+        <Button onClick={() => window.location.reload()} variant="danger">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-10">
@@ -76,14 +150,14 @@ export default function AdminCategories() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Product <span className="text-primary italic font-medium ml-1">Categories</span></h1>
-          <p className="text-[14px] text-gray-500 mt-1 font-medium italic">Organize your inventory with categories and subcategories.</p>
+          <p className="text-[14px] text-gray-500 mt-1 font-medium italic">Organize your inventory with categories and descriptions.</p>
         </div>
         <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className=""
+          onClick={openAddModal}
+          className="flex items-center gap-2"
         >
-          <Plus size={20} strokeWidth={3} />
-          Add New Category
+          <Plus size={18} strokeWidth={2.5} />
+          Add Category
         </Button>
       </div>
 
@@ -103,95 +177,83 @@ export default function AdminCategories() {
 
       {/* ── Categories Grid ───────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredCategories.map((category) => (
-          <div key={category.id} className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden group hover:border-primary/30 transition-all">
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-3xl shadow-sm group-hover:scale-110 transition-transform duration-300">
-                    {category.icon}
+        {filteredCategories.length > 0 ? (
+          filteredCategories.map((category) => (
+            <div key={category._id} className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden group hover:border-primary/30 transition-all flex flex-col">
+              <div className="p-6 flex-1">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
+                      {category.image ? (
+                        <img src={category?.image?.url} alt={category.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Grid2X2 className="text-gray-300" size={32} />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-gray-900 group-hover:text-primary transition-colors">{category.name}</h3>
+                      <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest font-mono">ID: {category.id.slice(-8)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 group-hover:text-primary transition-colors">{category.name}</h3>
-                    <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest font-mono">ID: {category.id.slice(0, 8)}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditModal(category)}
+                      className="p-2 text-gray-400 hover:bg-gray-50 hover:text-amber-500 rounded-lg transition-all"
+                    >
+                      <Edit3 size={18} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteData({ id: category._id, name: category.name });
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button className="p-2 text-gray-400 hover:bg-gray-50 hover:text-amber-500 rounded-lg transition-all">
-                    <Edit3 size={18} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDeleteData({ id: category.id, name: category.name, type: 'category' });
-                      setIsDeleteModalOpen(true);
-                    }}
-                    className="p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
 
-              {/* Subcategories Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between mb-2">
+                <div className="space-y-3">
                   <h4 className="text-[12px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Layers size={14} className="text-primary" />
-                    Subcategories ({category.subcategories.length})
+                    Description
                   </h4>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(category);
-                      setIsSubcatModalOpen(true);
-                    }}
-                    className="text-[12px] font-bold text-primary hover:underline flex items-center gap-1"
-                  >
-                    <Plus size={14} strokeWidth={3} />
-                    Add Sub
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {category.subcategories.length > 0 ? (
-                    category.subcategories.map((sub) => (
-                      <div key={sub.id} className="flex items-center gap-2 bg-[#F8F9FA] border border-gray-100 pl-3 pr-1 py-1 rounded-lg group/sub hover:border-primary/30 transition-all">
-                        <span className="text-[13px] font-bold text-gray-600">{sub.name}</span>
-                        <button
-                          onClick={() => {
-                            setDeleteData({ id: sub.id, name: sub.name, type: 'subcategory', parentId: category.id });
-                            setIsDeleteModalOpen(true);
-                          }}
-                          className="p-1 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all opacity-0 group-hover/sub:opacity-100"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[13px] text-gray-400 italic">No subcategories yet</p>
-                  )}
+                  <p className="text-[14px] text-gray-600 line-clamp-2 italic">
+                    {category.description || "No description provided."}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            <div className="px-6 py-4 bg-[#FBFBFC]/50 border-t border-gray-50 flex items-center justify-between">
-              <span className="text-[12px] font-bold text-gray-500">Route: /category/{category.slug}</span>
-              <button className="text-primary text-[12px] font-black uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all">
-                View Products
-                <ChevronRight size={14} strokeWidth={3} />
-              </button>
+              <div className="px-6 py-4 bg-[#FBFBFC]/50 border-t border-gray-50 flex items-center justify-between">
+                <span className="text-[12px] font-bold text-gray-500">Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'N/A'}</span>
+                <button className="text-primary text-[12px] font-black uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all">
+                  View Products
+                  <ChevronRight size={14} strokeWidth={3} />
+                </button>
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="lg:col-span-2 py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300">
+              <Search size={32} />
+            </div>
+            <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">No categories found matching your search</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* ── Add Category Modal ────────────────────────────────── */}
       <CustomModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Add New Category"
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingCategory(null);
+        }}
+        title={editingCategory ? "Update Category" : "Add New Category"}
+        maxWidth="max-w-4xl"
       >
-        <form onSubmit={handleAddCategory} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-8">
           <div className="space-y-2">
             <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Category Name</label>
             <input
@@ -204,59 +266,89 @@ export default function AdminCategories() {
             />
           </div>
 
+
+
           <div className="space-y-2">
-            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Icon (Emoji)</label>
-            <input
+            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Description</label>
+            <textarea
               required
-              type="text"
-              placeholder="🍯, 🫘, 🌶️..."
-              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
-              value={newCat.icon}
-              onChange={(e) => setNewCat({ ...newCat, icon: e.target.value })}
+              placeholder="Describe this category..."
+              rows={3}
+              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900 resize-none"
+              value={newCat.description}
+              onChange={(e) => setNewCat({ ...newCat, description: e.target.value })}
             />
           </div>
+          <div className="space-y-2">
+            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Category Image</label>
+            <div
+              onClick={() => document.getElementById('category-image')?.click()}
+              className={cn(
+                "group relative w-full h-48 bg-[#F8F9FA] border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary/50 hover:bg-primary/[0.02]",
+                imagePreview && "border-solid border-primary/30 bg-white"
+              )}
+            >
+              <input
+                id="category-image"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
 
+              {imagePreview ? (
+                <div className="relative w-full h-full p-2 group/preview">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-xl shadow-sm"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                    <p className="text-white text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                      <ImageIcon size={14} /> Change Image
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setImagePreview(null);
+                      setNewCat({ ...newCat, image: "" });
+                    }}
+                    className="absolute -top-2 -right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
+                  >
+                    <X size={16} strokeWidth={3} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3 text-center px-4">
+                  <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-primary group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
+                    <Upload size={24} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-black text-gray-900 uppercase tracking-tight">Click to upload</p>
+                    <p className="text-[12px] font-bold text-gray-400 mt-1 italic">PNG, JPG or WebP (Max 5MB)</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="pt-2">
-            <Button type="submit" className="w-full">
-              <CheckCircle2 size={20} strokeWidth={2.5} />
-              Create Category
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {(createMutation.isPending || updateMutation.isPending) ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <CheckCircle2 size={20} strokeWidth={2.5} />
+              )}
+              {editingCategory
+                ? (updateMutation.isPending ? "Updating..." : "Update Category")
+                : (createMutation.isPending ? "Creating..." : "Create Category")
+              }
             </Button>
-          </div>
-        </form>
-      </CustomModal>
-
-      {/* ── Add Subcategory Modal ─────────────────────────────── */}
-      <CustomModal
-        isOpen={isSubcatModalOpen}
-        onClose={() => setIsSubcatModalOpen(false)}
-        title="Add Subcategory"
-      >
-        <div className="mb-6 p-4 bg-primary/5 rounded-lg flex items-center gap-4 border border-primary/10">
-          <div className="text-2xl">{selectedCategory?.icon}</div>
-          <div>
-            <p className="text-[11px] font-black text-primary uppercase tracking-widest">Adding to Parent:</p>
-            <p className="text-[15px] font-bold text-gray-900">{selectedCategory?.name}</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleAddSubcategory} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Subcategory Name</label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. Forest Honey, Madina Dates..."
-              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
-              value={newSubcat.name}
-              onChange={(e) => setNewSubcat({ ...newSubcat, name: e.target.value })}
-            />
-          </div>
-
-          <div className="pt-2">
-            <button type="submit" className="w-full bg-primary text-white py-4 rounded-lg font-black text-[15px] hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-              <CheckCircle2 size={20} strokeWidth={2.5} />
-              Create Subcategory
-            </button>
           </div>
         </form>
       </CustomModal>
@@ -281,19 +373,20 @@ export default function AdminCategories() {
             </p>
           </div>
           <div className="flex w-full justify-end gap-3 pt-2">
-
             <Button
               variant='outline'
-              className=""
               onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleteMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               variant='danger'
               onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
             >
-              Confirm Delete
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {deleteMutation.isPending ? "Deleting..." : "Confirm Delete"}
             </Button>
           </div>
         </div>

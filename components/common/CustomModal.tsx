@@ -32,14 +32,14 @@ export function CustomModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         className={cn(
-          "p-0 overflow-hidden border-none  rounded-lg",
+          "p-0 overflow-hidden border-none  rounded-lg sm:min-w-[500px] max-h-[90vh] overflow-y-auto",
           maxWidth
         )}
         showCloseButton={false}
       >
         {/* Header with Variant Color */}
         <DialogHeader className={cn(
-          "p-6 relative",
+          "p-6 relative ",
           variant === "danger" ? "bg-red-800" : "bg-primary"
         )}>
           <div className="flex items-center justify-between">

@@ -11,7 +11,8 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
-  icon: string;
+  image: {}
+  ;
   subcategories: Subcategory[];
 }
 
@@ -42,20 +43,20 @@ interface AdminState {
   categories: Category[];
   brands: Brand[];
   products: Product[];
-  
+
   // Actions
   addCategory: (category: Omit<Category, "id" | "subcategories">) => void;
   updateCategory: (id: string, category: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
-  
+
   addSubcategory: (categoryId: string, subcategory: Omit<Subcategory, "id">) => void;
   updateSubcategory: (categoryId: string, subcategoryId: string, subcategory: Partial<Subcategory>) => void;
   deleteSubcategory: (categoryId: string, subcategoryId: string) => void;
-  
+
   addBrand: (brand: Omit<Brand, "id">) => void;
   updateBrand: (id: string, brand: Partial<Brand>) => void;
   deleteBrand: (id: string) => void;
-  
+
   addProduct: (product: Omit<Product, "id" | "createdAt">) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
@@ -65,8 +66,8 @@ export const useAdminStore = create<AdminState>()(
   persist(
     (set) => ({
       categories: [
-        { id: "1", name: "Honey", slug: "honey", icon: "🍯", subcategories: [] },
-        { id: "2", name: "Dates", slug: "dates", icon: "🫘", subcategories: [] },
+        { id: "1", name: "Honey", slug: "honey", image: "🍯", subcategories: [] },
+        { id: "2", name: "Dates", slug: "dates", image: "🫘", subcategories: [] },
       ],
       brands: [
         { id: "b1", name: "Pran", slug: "pran" },
@@ -77,38 +78,38 @@ export const useAdminStore = create<AdminState>()(
       addCategory: (cat) => set((state) => ({
         categories: [...state.categories, { ...cat, id: crypto.randomUUID(), subcategories: [] }]
       })),
-      
+
       updateCategory: (id, cat) => set((state) => ({
         categories: state.categories.map((c) => c.id === id ? { ...c, ...cat } : c)
       })),
-      
+
       deleteCategory: (id) => set((state) => ({
         categories: state.categories.filter((c) => c.id !== id)
       })),
 
       addSubcategory: (categoryId, subcat) => set((state) => ({
-        categories: state.categories.map((c) => 
-          c.id === categoryId 
-            ? { ...c, subcategories: [...c.subcategories, { ...subcat, id: crypto.randomUUID() }] } 
+        categories: state.categories.map((c) =>
+          c.id === categoryId
+            ? { ...c, subcategories: [...c.subcategories, { ...subcat, id: crypto.randomUUID() }] }
             : c
         )
       })),
 
       updateSubcategory: (categoryId, subcategoryId, subcat) => set((state) => ({
-        categories: state.categories.map((c) => 
-          c.id === categoryId 
-            ? { 
-                ...c, 
-                subcategories: c.subcategories.map((sc) => sc.id === subcategoryId ? { ...sc, ...subcat } : sc) 
-              } 
+        categories: state.categories.map((c) =>
+          c.id === categoryId
+            ? {
+              ...c,
+              subcategories: c.subcategories.map((sc) => sc.id === subcategoryId ? { ...sc, ...subcat } : sc)
+            }
             : c
         )
       })),
 
       deleteSubcategory: (categoryId, subcategoryId) => set((state) => ({
-        categories: state.categories.map((c) => 
-          c.id === categoryId 
-            ? { ...c, subcategories: c.subcategories.filter((sc) => sc.id !== subcategoryId) } 
+        categories: state.categories.map((c) =>
+          c.id === categoryId
+            ? { ...c, subcategories: c.subcategories?.filter((sc) => sc.id !== subcategoryId) }
             : c
         )
       })),
@@ -127,11 +128,11 @@ export const useAdminStore = create<AdminState>()(
 
       addProduct: (product) => set((state) => ({
         products: [
-          ...state.products, 
-          { 
-            ...product, 
-            id: crypto.randomUUID(), 
-            createdAt: new Date().toISOString() 
+          ...state.products,
+          {
+            ...product,
+            id: crypto.randomUUID(),
+            createdAt: new Date().toISOString()
           }
         ]
       })),
