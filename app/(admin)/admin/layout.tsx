@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ChevronDown,
   Grid2X2,
+  Layers,
   Tags
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const sidebarItems = [
     children: [
       { name: "Products", href: "/admin/products", icon: Package },
       { name: "Categories", href: "/admin/categories", icon: Grid2X2 },
+      { name: "Subcategories", href: "/admin/subcategories", icon: Layers },
       { name: "Brands", href: "/admin/brands", icon: Tags },
     ]
   },

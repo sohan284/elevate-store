@@ -21,6 +21,8 @@ import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory 
 import { Category } from "@/lib/services/category-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
+import { AdminItemCard, AdminItemCardSkeleton } from "@/components/admin/AdminItemCard";
+import { getProxiedImageUrl } from "@/lib/utils";
 
 export default function AdminCategories() {
   const { data: categoriesResponse, isLoading, isError, error } = useCategories();
@@ -63,17 +65,18 @@ export default function AdminCategories() {
 
     if (editingCategory) {
       const changedData: Partial<typeof newCat> = {};
-      
-      if (newCat.name !== editingCategory.name) 
+
+      if (newCat.name !== editingCategory.name)
         changedData.name = newCat.name;
-      
-      if (newCat.description !== editingCategory.description) 
+
+      if (newCat.description !== editingCategory.description)
         changedData.description = newCat.description;
-      
+
       // Check image change
       const isNewFile = newCat.image instanceof File;
-      const isImageUrlChanged = typeof newCat.image === 'string' && newCat.image !== editingCategory.image.url;
-      
+      const getEditingImageUrl = typeof editingCategory.image === 'string' ? editingCategory.image : editingCategory.image?.url;
+      const isImageUrlChanged = typeof newCat.image === 'string' && newCat.image !== getEditingImageUrl;
+
       if (isNewFile || isImageUrlChanged) {
         changedData.image = newCat.image;
       }
@@ -103,13 +106,14 @@ export default function AdminCategories() {
   };
 
   const openEditModal = (category: Category) => {
+    const catImageUrl = typeof category.image === 'string' ? category.image : category.image?.url;
     setEditingCategory(category);
     setNewCat({
       name: category.name,
-      image: category.image.url,
-      description: category.description
+      image: catImageUrl || "",
+      description: category.description || ""
     });
-    setImagePreview(category.image.url);
+    setImagePreview(catImageUrl || null);
     setIsAddModalOpen(true);
   };
 
@@ -119,15 +123,6 @@ export default function AdminCategories() {
     setIsDeleteModalOpen(false);
     setDeleteData(null);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-        <p className="text-gray-500 font-medium animate-pulse">Loading categories...</p>
-      </div>
-    );
-  }
 
   if (isError) {
     return (
@@ -176,62 +171,26 @@ export default function AdminCategories() {
       </div>
 
       {/* ── Categories Grid ───────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredCategories.length > 0 ? (
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <AdminItemCardSkeleton key={i} />)
+        ) : filteredCategories.length > 0 ? (
           filteredCategories.map((category) => (
-            <div key={category._id} className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden group hover:border-primary/30 transition-all flex flex-col">
-              <div className="p-6 flex-1">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
-                      {category.image ? (
-                        <img src={category?.image?.url} alt={category.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <Grid2X2 className="text-gray-300" size={32} />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-gray-900 group-hover:text-primary transition-colors">{category.name}</h3>
-                      <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest font-mono">ID: {category.id.slice(-8)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openEditModal(category)}
-                      className="p-2 text-gray-400 hover:bg-gray-50 hover:text-amber-500 rounded-lg transition-all"
-                    >
-                      <Edit3 size={18} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setDeleteData({ id: category._id, name: category.name });
-                        setIsDeleteModalOpen(true);
-                      }}
-                      className="p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-all"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-[12px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    Description
-                  </h4>
-                  <p className="text-[14px] text-gray-600 line-clamp-2 italic">
-                    {category.description || "No description provided."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-[#FBFBFC]/50 border-t border-gray-50 flex items-center justify-between">
-                <span className="text-[12px] font-bold text-gray-500">Created: {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'N/A'}</span>
-                <button className="text-primary text-[12px] font-black uppercase tracking-wider flex items-center gap-1 hover:gap-2 transition-all">
-                  View Products
-                  <ChevronRight size={14} strokeWidth={3} />
-                </button>
-              </div>
-            </div>
+            <AdminItemCard
+              key={category._id}
+              id={category.id}
+              _id={category._id}
+              name={category.name}
+              imageUrl={typeof category.image === 'string' ? category.image : category.image?.url}
+              description={category.description}
+              createdAt={category.createdAt}
+              FallbackIcon={Grid2X2}
+              onEdit={() => openEditModal(category)}
+              onDelete={() => {
+                setDeleteData({ id: category._id, name: category.name });
+                setIsDeleteModalOpen(true);
+              }}
+            />
           ))
         ) : (
           <div className="lg:col-span-2 py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
@@ -299,7 +258,7 @@ export default function AdminCategories() {
               {imagePreview ? (
                 <div className="relative w-full h-full p-2 group/preview">
                   <img
-                    src={imagePreview}
+                    src={getProxiedImageUrl(imagePreview)}
                     alt="Preview"
                     className="w-full h-full object-cover rounded-xl shadow-sm"
                   />

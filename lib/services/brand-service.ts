@@ -1,16 +1,16 @@
 import { apiClient, ApiResponse } from "@/lib/api-client";
 
-export interface CategoryInput {
+export interface BrandInput {
   name: string;
-  image: File | string;
+  logo: File | string;
   description: string;
 }
 
-export interface Category {
+export interface Brand {
   _id: string; // MongoDB formatted ID
   id: string;   // UI-facing ID
   name: string;
-  image: string | {
+  logo: string | {
     url: string;
     public_id?: string;
   };
@@ -19,44 +19,44 @@ export interface Category {
   updatedAt?: string;
 }
 
-export const categorieservice = {
+export const brandService = {
   getAll: async () => {
-    const response = await apiClient.get<ApiResponse<Category[]>>("/categories");
+    const response = await apiClient.get<ApiResponse<Brand[]>>("/brands");
     return response.data;
   },
 
-  create: async (data: CategoryInput) => {
+  create: async (data: BrandInput) => {
     let payload: any = data;
 
-    if (data.image instanceof File) {
+    if (data.logo instanceof File) {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("description", data.description);
-      formData.append("image", data.image);
+      formData.append("image", data.logo);
       payload = formData;
     }
 
-    const response = await apiClient.post<ApiResponse<Category>>("/categories", payload);
+    const response = await apiClient.post<ApiResponse<Brand>>("/brands", payload);
     return response.data;
   },
 
-  update: async (id: string, data: Partial<CategoryInput>) => {
+  update: async (id: string, data: Partial<BrandInput>) => {
     let payload: any = data;
 
-    if (data.image instanceof File) {
+    if (data.logo instanceof File) {
       const formData = new FormData();
       if (data.name) formData.append("name", data.name);
       if (data.description) formData.append("description", data.description);
-      formData.append("image", data.image);
+      formData.append("image", data.logo);
       payload = formData;
     }
 
-    const response = await apiClient.patch<ApiResponse<Category>>(`/categories/${id}`, payload);
+    const response = await apiClient.patch<ApiResponse<Brand>>(`/brands/${id}`, payload);
     return response.data;
   },
 
   delete: async (id: string) => {
-    const response = await apiClient.delete<ApiResponse<any>>(`/categories/${id}`);
+    const response = await apiClient.delete<ApiResponse<any>>(`/brands/${id}`);
     return response.data;
   },
 };
