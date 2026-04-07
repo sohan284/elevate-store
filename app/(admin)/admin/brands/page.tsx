@@ -4,27 +4,19 @@ import React, { useState } from "react";
 import {
   Plus,
   Search,
-  Grid2X2,
-  Edit3,
-  Trash2,
-  ChevronRight,
-  Layers,
   CheckCircle2,
-  X,
   AlertTriangle,
   Loader2,
-  Upload,
-  Image as ImageIcon,
   Store,
-  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from "@/lib/hooks/useBrands";
+import { useImageUpload } from "@/lib/hooks/useImageUpload";
 import { Brand } from "@/lib/services/brand-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
 import { AdminItemCard, AdminItemCardSkeleton } from "@/components/admin/AdminItemCard";
-import { getProxiedImageUrl } from "@/lib/utils";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 export default function AdminBrands() {
   const { data: brandsResponse, isLoading, isError, error } = useBrands();
@@ -44,18 +36,10 @@ export default function AdminBrands() {
     logo: "",
     description: ""
   });
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { imagePreview, setImagePreview, handleFileChange, clearImage } = useImageUpload();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewBrand({ ...newBrand, logo: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleBrandFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileChange(e, (file) => setNewBrand((prev) => ({ ...prev, logo: file })));
   };
 
   const filteredBrands = brandsResponse?.data?.filter(brand =>
@@ -95,7 +79,7 @@ export default function AdminBrands() {
     }
 
     setNewBrand({ name: "", logo: "", description: "" });
-    setImagePreview(null);
+    clearImage();
     setEditingBrand(null);
     setIsAddModalOpen(false);
   };
@@ -103,7 +87,7 @@ export default function AdminBrands() {
   const openAddModal = () => {
     setEditingBrand(null);
     setNewBrand({ name: "", logo: "", description: "" });
-    setImagePreview(null);
+    clearImage();
     setIsAddModalOpen(true);
   };
 
@@ -243,60 +227,16 @@ export default function AdminBrands() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Brand Logo / Image</label>
-            <div
-              onClick={() => document.getElementById('brand-image')?.click()}
-              className={cn(
-                "group relative w-full h-48 bg-[#F8F9FA] border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary/50 hover:bg-primary/[0.02]",
-                imagePreview && "border-solid border-primary/30 bg-white"
-              )}
-            >
-              <input
-                id="brand-image"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-
-              {imagePreview ? (
-                <div className="relative w-full h-full p-2 group/preview">
-                  <img
-                    src={getProxiedImageUrl(imagePreview)}
-                    alt="Preview"
-                    className="w-full h-full object-cover rounded-xl shadow-sm"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                    <p className="text-white text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                      <ImageIcon size={14} /> Change Image
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setImagePreview(null);
-                      setNewBrand({ ...newBrand, logo: "" });
-                    }}
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
-                  >
-                    <X size={16} strokeWidth={3} />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-center px-4">
-                  <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-primary group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300">
-                    <Upload size={24} strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <p className="text-[14px] font-black text-gray-900 uppercase tracking-tight">Click to upload</p>
-                    <p className="text-[12px] font-bold text-gray-400 mt-1 italic">PNG, JPG or WebP (Max 5MB)</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageUploader
+            inputId="brand-image"
+            label="Brand Logo / Image"
+            imagePreview={imagePreview}
+            onFileChange={handleBrandFileChange}
+            onClear={() => {
+              clearImage();
+              setNewBrand({ ...newBrand, logo: "" });
+            }}
+          />
 
           <div className="pt-2">
             <Button

@@ -1,32 +1,34 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { 
-  Plus, 
-  Search, 
-  Image as ImageIcon,
+import {
+  Plus,
+  Search,
+  CheckCircle2,
   AlertTriangle,
   Loader2,
-  Layers
+  Layers,
 } from "lucide-react";
-import { 
-  useSubcategories, 
-  useCreateSubcategory, 
-  useUpdateSubcategory, 
-  useDeleteSubcategory 
+import { cn } from "@/lib/utils";
+import {
+  useSubcategories,
+  useCreateSubcategory,
+  useUpdateSubcategory,
+  useDeleteSubcategory
 } from "@/lib/hooks/useSubcategories";
 import { useCategories } from "@/lib/hooks/useCategories";
+import { useImageUpload } from "@/lib/hooks/useImageUpload";
 import { Subcategory } from "@/lib/services/subcategory-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
 import { AdminItemCard, AdminItemCardSkeleton } from "@/components/admin/AdminItemCard";
-import { getProxiedImageUrl } from "@/lib/utils";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 export default function AdminSubcategories() {
   // Query Data
   const { data: subResp, isLoading, isError, error } = useSubcategories();
   const { data: catResp } = useCategories();
-  
+
   // Mutations
   const createMutation = useCreateSubcategory();
   const updateMutation = useUpdateSubcategory();
@@ -39,7 +41,6 @@ export default function AdminSubcategories() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteData, setDeleteData] = useState<{ id: string; name: string } | null>(null);
 
@@ -48,57 +49,53 @@ export default function AdminSubcategories() {
     name: "",
     image: "" as string | File,
     description: "",
-    categoryId: ""
+    categoriesId: ""
   });
+  const { imagePreview, setImagePreview, handleFileChange, clearImage } = useImageUpload();
 
   // Filter Logic
   const filteredSubs = useMemo(() => {
-    return subcategories.filter(sub => 
+    return subcategories.filter(sub =>
       sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sub.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [subcategories, searchTerm]);
 
-  // Handle image upload tracking
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewSub({ ...newSub, image: file });
-      setImagePreview(URL.createObjectURL(file));
-    }
+  const handleSubFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileChange(e, (file) => setNewSub((prev) => ({ ...prev, image: file })));
   };
 
   // Form Reset
   const resetForm = () => {
-    setNewSub({ name: "", image: "", description: "", categoryId: "" });
-    setImagePreview(null);
+    setNewSub({ name: "", image: "", description: "", categoriesId: "" });
+    clearImage();
     setEditingSubcategory(null);
   };
 
   // Submission handles
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSub.categoryId) {
+    if (!newSub.categoriesId) {
       alert("Please select a parent Category!");
       return;
     }
-    
+
     if (editingSubcategory) {
       const changedData: any = {};
       if (newSub.name !== editingSubcategory.name) changedData.name = newSub.name;
       if (newSub.description !== editingSubcategory.description) changedData.description = newSub.description;
-      if (newSub.categoryId !== editingSubcategory.categoryId) changedData.categoryId = newSub.categoryId;
-      
+      if (newSub.categoriesId !== editingSubcategory.categoriesId) changedData.categoriesId = newSub.categoriesId;
+
       const isNewFile = newSub.image instanceof File;
       const getEditingImageUrl = typeof editingSubcategory.image === 'string' ? editingSubcategory.image : editingSubcategory.image?.url;
       const isImageUrlChanged = typeof newSub.image === 'string' && newSub.image !== getEditingImageUrl;
-      
+
       if (isNewFile || isImageUrlChanged) {
         changedData.image = newSub.image;
       }
 
       if (Object.keys(changedData).length > 0) {
-        await updateMutation.mutateAsync({ id: editingSubcategory._id, data: changedData });
+        await updateMutation.mutateAsync({ id: editingSubcategory.id, data: changedData });
       }
     } else {
       await createMutation.mutateAsync(newSub);
@@ -126,7 +123,7 @@ export default function AdminSubcategories() {
       name: sub.name,
       image: subImageUrl || "",
       description: sub.description || "",
-      categoryId: sub.categoryId || ""
+      categoriesId: sub.categoriesId || ""
     });
     setImagePreview(subImageUrl || null);
     setIsAddModalOpen(true);
@@ -185,7 +182,7 @@ export default function AdminSubcategories() {
         ) : filteredSubs.length > 0 ? (
           filteredSubs.map((sub) => {
             // Find parent category to display within the description dynamically!
-            const parentCat = categories.find(c => c._id === sub.categoryId);
+            const parentCat = categories.find(c => c._id === sub.categoriesId);
             const formattedDesc = parentCat ? `Parent: ${parentCat.name} | ${sub.description}` : sub.description;
 
             return (
@@ -224,37 +221,39 @@ export default function AdminSubcategories() {
           resetForm();
         }}
         title={editingSubcategory ? "Edit Subcategory" : "Add New Subcategory"}
-        size="md"
       >
         <form onSubmit={handleAddSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Parent Category</label>
-            <select
-              required
-              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-xl px-4 py-3.5 text-[15px] font-semibold text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 tracking-tight transition-all appearance-none"
-              value={newSub.categoryId}
-              onChange={(e) => setNewSub({ ...newSub, categoryId: e.target.value })}
-            >
-              <option value="" disabled>Select a Category...</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Parent Category</label>
+              <select
+                required
+                className="w-full bg-[#F8F9FA] border border-gray-100 rounded-xl px-4 py-3.5 text-[15px] font-semibold text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 tracking-tight transition-all appearance-none"
+                value={newSub.categoriesId}
+                onChange={(e) => setNewSub({ ...newSub, categoriesId: e.target.value })}
+              >
+                <option value="" disabled>Select a Category...</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Subcategory Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Smart Watches"
+                className="w-full bg-[#F8F9FA] border border-gray-100 rounded-xl px-4 py-3.5 text-[15px] font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/10 tracking-tight transition-all placeholder:text-gray-300"
+                value={newSub.name}
+                onChange={(e) => setNewSub({ ...newSub, name: e.target.value })}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Subcategory Name</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Smart Watches"
-              className="w-full bg-[#F8F9FA] border border-gray-100 rounded-xl px-4 py-3.5 text-[15px] font-semibold text-gray-900 outline-none focus:ring-4 focus:ring-primary/10 tracking-tight transition-all placeholder:text-gray-300"
-              value={newSub.name}
-              onChange={(e) => setNewSub({ ...newSub, name: e.target.value })}
-            />
-          </div>
+
 
           <div className="space-y-2">
             <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Description</label>
@@ -267,70 +266,32 @@ export default function AdminSubcategories() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Subcategory Image</label>
-            <div
-              onClick={() => document.getElementById('sub-image')?.click()}
-              className={`group relative w-full h-48 bg-[#F8F9FA] border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary/50 hover:bg-primary/5 ${imagePreview && "border-solid border-primary/30 bg-white"}`}
-            >
-              <input
-                id="sub-image"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-
-              {imagePreview ? (
-                <div className="relative w-full h-full p-2 group/preview">
-                  <img
-                    src={getProxiedImageUrl(imagePreview)}
-                    alt="Preview"
-                    className="w-full h-full object-cover rounded-xl shadow-sm"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                    <p className="text-white text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                      <ImageIcon size={14} /> Change Image
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setImagePreview(null);
-                      setNewSub({ ...newSub, image: "" });
-                    }}
-                    className="absolute top-4 right-4 bg-red-500 text-white p-1.5 rounded-full shadow-lg hover:bg-red-600 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center text-gray-400 group-hover:text-primary transition-colors">
-                  <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
-                    <ImageIcon size={24} className="text-primary/60" />
-                  </div>
-                  <p className="text-[14px] font-bold">Click to upload image</p>
-                  <p className="text-[12px] font-medium text-gray-400 mt-1">SVG, PNG, JPG or WEBP (max. 2MB)</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageUploader
+            inputId="sub-image"
+            label="Subcategory Image"
+            imagePreview={imagePreview}
+            onFileChange={handleSubFileChange}
+            onClear={() => {
+              clearImage();
+              setNewSub({ ...newSub, image: "" });
+            }}
+          />
 
           <div className="pt-2">
             <Button
               type="submit"
-              className="w-full py-6 text-[15px] font-black uppercase tracking-widest bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all rounded-xl cursor-copy"
+              className="w-full"
               disabled={createMutation.isPending || updateMutation.isPending}
             >
-              {createMutation.isPending || updateMutation.isPending ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="animate-spin" size={20} />
-                  Saving...
-                </div>
+              {(createMutation.isPending || updateMutation.isPending) ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                editingSubcategory ? "Update Subcategory" : "Create Subcategory"
+                <CheckCircle2 size={20} strokeWidth={2.5} />
               )}
+              {editingSubcategory
+                ? (updateMutation.isPending ? "Updating..." : "Update Subcategory")
+                : (createMutation.isPending ? "Creating..." : "Create Subcategory")
+              }
             </Button>
           </div>
         </form>
@@ -341,7 +302,6 @@ export default function AdminSubcategories() {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         title="Confirm Deletion"
-        size="sm"
       >
         <div className="space-y-6">
           <div className="bg-rose-50 text-rose-600 p-4 rounded-xl flex items-start gap-4">
@@ -353,7 +313,7 @@ export default function AdminSubcategories() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="outline"

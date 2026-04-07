@@ -4,7 +4,7 @@ export interface SubcategoryInput {
   name: string;
   image: File | string;
   description: string;
-  categoryId: string; // Foreign key
+  categoriesId: string; // Foreign key
 }
 
 export interface Subcategory {
@@ -16,7 +16,7 @@ export interface Subcategory {
     public_id?: string;
   };
   description: string;
-  categoryId: string;
+  categoriesId: string;
   category?: {
     _id: string;
     name: string;
@@ -27,7 +27,7 @@ export interface Subcategory {
 
 export const subcategoryService = {
   getAll: async () => {
-    const response = await apiClient.get<ApiResponse<Subcategory[]>>("/subcategories");
+    const response = await apiClient.get<ApiResponse<Subcategory[]>>("/sub-categories");
     return response.data;
   },
 
@@ -38,12 +38,12 @@ export const subcategoryService = {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("description", data.description);
-      formData.append("categoryId", data.categoryId);
+      formData.append("categoriesId", data.categoriesId);
       formData.append("image", data.image);
       payload = formData;
     }
 
-    const response = await apiClient.post<ApiResponse<Subcategory>>("/subcategories", payload);
+    const response = await apiClient.post<ApiResponse<Subcategory>>("/sub-categories", payload);
     return response.data;
   },
 
@@ -54,17 +54,17 @@ export const subcategoryService = {
       const formData = new FormData();
       if (data.name) formData.append("name", data.name);
       if (data.description) formData.append("description", data.description);
-      if (data.categoryId) formData.append("categoryId", data.categoryId);
+      if (data.categoriesId) formData.append("categoriesId", data.categoriesId);
       formData.append("image", data.image);
       payload = formData;
     }
 
-    const response = await apiClient.patch<ApiResponse<Subcategory>>(`/subcategories/${id}`, payload);
+    const response = await apiClient.patch<ApiResponse<Subcategory>>(`/sub-categories/${id}`, payload);
     return response.data;
   },
 
   delete: async (id: string) => {
-    const response = await apiClient.delete<ApiResponse<any>>(`/subcategories/${id}`);
+    const response = await apiClient.delete<ApiResponse<any>>(`/sub-categories/${id}`);
     return response.data;
   },
 };
