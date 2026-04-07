@@ -9,6 +9,13 @@ import {
   Loader2,
   Layers,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   useSubcategories,
@@ -226,19 +233,25 @@ export default function AdminSubcategories() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Parent Category</label>
-              <select
-                required
-                className="w-full bg-[#F8F9FA] border border-gray-100 rounded-xl px-4 py-3.5 text-[15px] font-semibold text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 tracking-tight transition-all appearance-none"
+              <Select
                 value={newSub.categoriesId}
-                onChange={(e) => setNewSub({ ...newSub, categoriesId: e.target.value })}
+                onValueChange={(value) => setNewSub({ ...newSub, categoriesId: value })}
               >
-                <option value="" disabled>Select a Category...</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full bg-[#F8F9FA] border-gray-100 py-3.5 px-4 rounded-xl font-semibold text-gray-700 focus:ring-4 focus:ring-primary/10 transition-all">
+                  <SelectValue placeholder="Select a Category..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-gray-100 shadow-xl overflow-hidden bg-white/95 backdrop-blur-md">
+                  {categories.map((cat) => (
+                    <SelectItem 
+                      key={cat.id} 
+                      value={cat.id}
+                      className="py-2.5 px-4 font-semibold text-gray-600 focus:bg-primary/5 focus:text-primary transition-colors cursor-pointer"
+                    >
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Subcategory Name</label>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,17 +11,16 @@ import {
   DollarSign,
   Image as ImageIcon,
   AlertCircle,
-  X
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Stepper } from "@/components/admin/Stepper";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { useSubcategories } from "@/lib/hooks/useSubcategories";
 import { useBrands } from "@/lib/hooks/useBrands";
-import { useCreateProduct } from "@/lib/hooks/useProducts";
+import { useProduct, useUpdateProduct } from "@/lib/hooks/useProducts";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { ProductInput } from "@/lib/services/product-service";
-import { Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -37,18 +36,19 @@ const STEPS = [
   { id: 4, label: "Media", description: "Product Images" },
 ];
 
-export default function NewProductPage() {
+export default function EditProductPage() {
   const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
 
   // Real Hooks
+  const { data: productResp, isLoading: productLoading } = useProduct(productId);
   const { data: categoriesResp, isLoading: catsLoading } = useCategories();
   const { data: subcategoriesResp, isLoading: subsLoading } = useSubcategories();
   const { data: brandsResp, isLoading: brandsLoading } = useBrands();
-  const createMutation = useCreateProduct();
+  const updateMutation = useUpdateProduct();
 
   const [currentStep, setCurrentStep] = useState(1);
-
-  // Form State
   const [formData, setFormData] = useState<ProductInput>({
     name: "",
     description: "",
@@ -58,26 +58,42 @@ export default function NewProductPage() {
     price: "",
     discount: "0",
     stock: 0,
-    images: [], // This will hold File objects or URLs
+    images: [],
   });
 
   const [previews, setPreviews] = useState<(string | null)[]>([null, null, null, null]);
+
+  // Sync data from API
+  useEffect(() => {
+    if (productResp?.data) {
+      const p = productResp.data;
+      setFormData({
+        name: p.name,
+        description: p.description,
+        categoriesId: p.categoriesId,
+        subCategoriesId: p.subCategoriesId,
+        brandId: p.brandId,
+        price: p.price.toString(),
+        discount: p.discount.toString(),
+        stock: p.stock,
+        images: p.images.map(img => typeof img === 'string' ? img : img.url),
+      });
+
+      const initialPreviews = [null, null, null, null];
+      p.images.forEach((img, idx) => {
+        if (idx < 4) {
+          initialPreviews[idx] = typeof img === 'string' ? img : img.url;
+        }
+      });
+      setPreviews(initialPreviews);
+    }
+  }, [productResp]);
 
   // Data helpers
   const categories = categoriesResp?.data || [];
   const brands = brandsResp?.data || [];
   const allSubcategories = subcategoriesResp?.data || [];
   const availableSubcategories = allSubcategories.filter(sub => sub.categoriesId === formData.categoriesId);
-
-  // SKU logic (Keep for UI only or if API needs it)
-  const [sku, setSku] = useState("");
-  useEffect(() => {
-    if (formData.name && !sku) {
-      const prefix = "ELV-";
-      const random = Math.floor(1000 + Math.random() * 9000);
-      setSku(`${prefix}${formData.name.slice(0, 3).toUpperCase()}-${random}`);
-    }
-  }, [formData.name]);
 
   const handleNext = () => {
     if (currentStep < 4) setCurrentStep(prev => prev + 1);
@@ -89,15 +105,27 @@ export default function NewProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Filter out nulls from images if any slots were left empty
-    const finalImages = formData.images.filter(img => img !== null);
-
-    createMutation.mutate({
-      ...formData,
-      images: finalImages
+    
+    // Filter out nulls/empty from images
+    const finalImages = formData.images.filter(img => !!img);
+    
+    updateMutation.mutate({
+      id: productId,
+      data: {
+        ...formData,
+        images: finalImages
+      }
     });
   };
+
+  if (productLoading) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-gray-400 font-bold uppercase tracking-widest text-sm italic">Loading Product Details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 pb-20">
@@ -111,8 +139,8 @@ export default function NewProductPage() {
           Back to List
         </button>
         <div className="text-right">
-          <h1 className="text-2xl font-black text-gray-900 leading-none">Create New <span className="text-primary italic">Product</span></h1>
-          <p className="text-[12px] font-bold text-gray-400 mt-2 italic">Follow the steps below to list a new item.</p>
+          <h1 className="text-2xl font-black text-gray-900 leading-none">Edit <span className="text-primary italic">Product</span></h1>
+          <p className="text-[12px] font-bold text-gray-400 mt-2 italic">Update existing inventory details.</p>
         </div>
       </div>
 
@@ -151,8 +179,8 @@ export default function NewProductPage() {
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-gray-100 shadow-xl overflow-hidden bg-white/95 backdrop-blur-md">
                     {categories.map((cat) => (
-                      <SelectItem
-                        key={cat.id}
+                      <SelectItem 
+                        key={cat.id} 
                         value={cat.id}
                         className="py-3 px-4 font-bold text-gray-600 focus:bg-primary/5 focus:text-primary transition-colors cursor-pointer"
                       >
@@ -176,8 +204,8 @@ export default function NewProductPage() {
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-gray-100 shadow-xl overflow-hidden bg-white/95 backdrop-blur-md">
                     {availableSubcategories.map((sub) => (
-                      <SelectItem
-                        key={sub.id}
+                      <SelectItem 
+                        key={sub.id} 
                         value={sub.id}
                         className="py-3 px-4 font-bold text-gray-600 focus:bg-primary/5 focus:text-primary transition-colors cursor-pointer"
                       >
@@ -186,11 +214,6 @@ export default function NewProductPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                {!formData.categoriesId && !catsLoading && (
-                  <p className="text-[11px] font-bold text-amber-500 flex items-center gap-1 mt-1">
-                    <AlertCircle size={12} /> Select a category first
-                  </p>
-                )}
               </div>
 
               {/* Brand Select */}
@@ -206,8 +229,8 @@ export default function NewProductPage() {
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-gray-100 shadow-xl overflow-hidden bg-white/95 backdrop-blur-md">
                     {brands.map((brand) => (
-                      <SelectItem
-                        key={brand.id}
+                      <SelectItem 
+                        key={brand.id} 
                         value={brand.id}
                         className="py-3 px-4 font-bold text-gray-600 focus:bg-primary/5 focus:text-primary transition-colors cursor-pointer"
                       >
@@ -230,7 +253,7 @@ export default function NewProductPage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Step 2: Core Details</h2>
-                <p className="text-[13px] font-bold text-gray-400 italic">Name your product and provide a description.</p>
+                <p className="text-[13px] font-bold text-gray-400 italic">Update product title and description.</p>
               </div>
             </div>
 
@@ -239,7 +262,6 @@ export default function NewProductPage() {
                 <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Product Title</label>
                 <input
                   required
-                  placeholder="e.g. Premium Sundarban Honey 1kg"
                   className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -251,19 +273,9 @@ export default function NewProductPage() {
                 <textarea
                   required
                   rows={5}
-                  placeholder="Describe the product features, benefits..."
                   className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900 resize-none"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-3 max-w-sm">
-                <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Product SKU (Auto-generated)</label>
-                <input
-                  readOnly
-                  className="w-full bg-gray-50 border border-gray-100 rounded-lg py-4 px-6 outline-none font-mono font-black text-gray-400 uppercase tracking-widest italic"
-                  value={sku}
                 />
               </div>
             </div>
@@ -279,7 +291,7 @@ export default function NewProductPage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Step 3: Pricing & Inventory</h2>
-                <p className="text-[13px] font-bold text-gray-400 italic">Set your prices and manage stock availability.</p>
+                <p className="text-[13px] font-bold text-gray-400 italic">Adjust current pricing and stock levels.</p>
               </div>
             </div>
 
@@ -291,7 +303,6 @@ export default function NewProductPage() {
                   <input
                     required
                     type="number"
-                    placeholder="0.00"
                     className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 pl-12 pr-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
@@ -305,7 +316,6 @@ export default function NewProductPage() {
                   <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
                   <input
                     type="number"
-                    placeholder="0"
                     className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 pl-12 pr-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
                     value={formData.discount}
                     onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
@@ -318,9 +328,8 @@ export default function NewProductPage() {
                 <input
                   required
                   type="number"
-                  placeholder="e.g. 50"
                   className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900"
-                  value={formData.stock || ""}
+                  value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                 />
               </div>
@@ -337,7 +346,7 @@ export default function NewProductPage() {
               </div>
               <div>
                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Step 4: Media Assets</h2>
-                <p className="text-[13px] font-bold text-gray-400 italic">Upload up to 4 high-quality images of your product.</p>
+                <p className="text-[13px] font-bold text-gray-400 italic">Manage product gallery images.</p>
               </div>
             </div>
 
@@ -370,7 +379,7 @@ export default function NewProductPage() {
                     setPreviews(newPreviews);
 
                     const newImages = [...formData.images];
-                    newImages.splice(index, 1); // Or keep index correct if backend expects specific order
+                    newImages[index] = null as any; // Or handle empty slot correctly
                     setFormData({ ...formData, images: newImages });
                   }}
                 />
@@ -397,11 +406,6 @@ export default function NewProductPage() {
             <button
               type="button"
               onClick={handleNext}
-              disabled={
-                (currentStep === 1 && (!formData.categoriesId || !formData.subCategoriesId || !formData.brandId)) ||
-                (currentStep === 2 && (!formData.name || !formData.description)) ||
-                (currentStep === 3 && !formData.price)
-              }
               className="flex-1 bg-primary text-white py-4 rounded-lg font-black text-[15px] hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Continue to {STEPS[currentStep].label}
@@ -410,20 +414,20 @@ export default function NewProductPage() {
           ) : (
             <button
               type="submit"
-              disabled={createMutation.isPending || formData.images.length === 0}
+              disabled={updateMutation.isPending}
               className={cn(
-                "flex-1 bg-gradient-to-br from-emerald-500 to-teal-700 text-white py-4 rounded-lg font-black text-[15px] hover:shadow-xl hover:shadow-emerald-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50",
-                createMutation.isPending && "animate-pulse"
+                "flex-1 bg-linear-to-br from-amber-500 to-orange-700 text-white py-4 rounded-lg font-black text-[15px] hover:shadow-xl hover:shadow-amber-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50",
+                updateMutation.isPending && "animate-pulse"
               )}
             >
-              {createMutation.isPending ? (
+              {updateMutation.isPending ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  Launching...
+                  Saving Changes...
                 </>
               ) : (
                 <>
-                  Launch Product Listing
+                  Save Product Updates
                   <CheckCircle2 size={20} strokeWidth={2.5} />
                 </>
               )}
