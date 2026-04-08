@@ -3,19 +3,33 @@
 import React, { useState } from "react";
 import {
   Plus,
-  Search,
-  Grid2X2,
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  Edit3,
+  Trash2,
+  Eye,
+  Grid2X2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { cn, getProxiedImageUrl, isPrivateIpImageUrl } from "@/lib/utils";
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/lib/hooks/useCategories";
 import { useImageUpload } from "@/lib/hooks/useImageUpload";
 import { Category } from "@/lib/services/category-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
-import { AdminItemCard, AdminItemCardSkeleton } from "@/components/admin/AdminItemCard";
+import { DataTable, ColumnDef } from "@/components/common/DataTable";
+import {
+  DataTableFilterBar,
+  DataTableSearch,
+} from "@/components/common/DataTableFilters";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
 export default function AdminCategories() {
@@ -110,6 +124,97 @@ export default function AdminCategories() {
     setDeleteData(null);
   };
 
+  const columns: ColumnDef<Category>[] = [
+    {
+      header: "Category",
+      cell: (cat) => {
+        const catImageUrl = typeof cat.image === 'string' ? cat.image : cat.image?.url;
+        const proxyUrl = getProxiedImageUrl(catImageUrl);
+        const isPrivateIp = isPrivateIpImageUrl(catImageUrl);
+        
+        return (
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+              {proxyUrl ? (
+                <Image src={proxyUrl} alt={cat.name} width={48} height={48} unoptimized={isPrivateIp} className="w-full h-full object-cover" />
+              ) : (
+                <Grid2X2 className="text-gray-300" size={20} />
+              )}
+            </div>
+            <div>
+              <h4 className="text-[14.5px] font-bold text-gray-900">{cat.name}</h4>
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider font-mono">ID: {cat.id?.slice(-8)}</p>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Description",
+      className: "max-w-[400px]",
+      cell: (cat) => {
+        const text = cat.description || "No description provided.";
+        const words = text.split(" ");
+        const isLong = words.length > 20;
+        const truncated = isLong ? words.slice(0, 20).join(" ") + "..." : text;
+
+        if (!isLong) return <p className="text-[14px] text-gray-600 italic leading-relaxed">{text}</p>;
+
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-[14px] text-gray-600 italic leading-relaxed cursor-help">
+                {truncated}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[300px] p-4 bg-white border-gray-100 shadow-xl rounded-xl text-[13.5px] font-medium text-gray-600 leading-relaxed italic animate-in fade-in zoom-in-95 duration-200">
+              {text}
+            </TooltipContent>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      header: "Created",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (cat) => (
+        <span className="text-[13px] font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100/50">
+          {cat.createdAt ? new Date(cat.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+        </span>
+      )
+    },
+    {
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (cat) => (
+        <div className="flex items-center justify-end gap-2">
+          <button className="p-2 text-gray-400 hover:bg-white hover:text-primary hover:shadow-md rounded-lg transition-all" title="View Details">
+            <Eye size={18} />
+          </button>
+          <button
+            onClick={() => openEditModal(cat)}
+            className="p-2 text-gray-400 hover:bg-white hover:text-amber-500 hover:shadow-md rounded-lg transition-all"
+            title="Edit Category"
+          >
+            <Edit3 size={18} />
+          </button>
+          <button
+            onClick={() => {
+              setDeleteData({ id: cat._id, name: cat.name });
+              setIsDeleteModalOpen(true);
+            }}
+            className="p-2 text-gray-400 hover:bg-white hover:text-rose-500 hover:shadow-md rounded-lg transition-all"
+            title="Delete Category"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
   if (isError) {
     return (
       <div className="bg-rose-50 border border-rose-100 p-8 rounded-2xl text-center max-w-2xl mx-auto mt-10">
@@ -126,67 +231,42 @@ export default function AdminCategories() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="flex flex-col h-full space-y-4">
       {/* ── Page Header ───────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Product <span className="text-primary italic font-medium ml-1">Categories</span></h1>
-          <p className="text-[14px] text-gray-500 mt-1 font-medium italic">Organize your inventory with categories and descriptions.</p>
-        </div>
-        <Button
-          onClick={openAddModal}
-          className="flex items-center gap-2"
-        >
-          <Plus size={18} strokeWidth={2.5} />
-          Add Category
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Product"
+        highlight="Categories"
+        description="Organize your inventory with high-level categories and visual descriptions."
+        actions={
+          <Button
+            onClick={openAddModal}
+            className="flex items-center gap-2"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+            Add Category
+          </Button>
+        }
+      />
 
-      {/* ── Search Bar ────────────────────────────────────────── */}
-      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-        <div className="relative group max-w-md">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
-          <input
-            type="text"
-            placeholder="Search categories..."
-            className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all text-[14px] font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* ── Filter Bar ────────────────────────────────────────── */}
+      <DataTableFilterBar>
+        <DataTableSearch
+          placeholder="Search categories by name..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+      </DataTableFilterBar>
 
-      {/* ── Categories Grid ───────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <AdminItemCardSkeleton key={i} />)
-        ) : filteredCategories.length > 0 ? (
-          filteredCategories.map((category) => (
-            <AdminItemCard
-              key={category._id}
-              id={category.id}
-              _id={category._id}
-              name={category.name}
-              imageUrl={typeof category.image === 'string' ? category.image : category.image?.url}
-              description={category.description}
-              createdAt={category.createdAt}
-              FallbackIcon={Grid2X2}
-              onEdit={() => openEditModal(category)}
-              onDelete={() => {
-                setDeleteData({ id: category._id, name: category.name });
-                setIsDeleteModalOpen(true);
-              }}
-            />
-          ))
-        ) : (
-          <div className="lg:col-span-2 py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300">
-              <Search size={32} />
-            </div>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">No categories found matching your search</p>
-          </div>
-        )}
-      </div>
+      {/* ── Categories Table ───────────────────────────────────── */}
+      <DataTable
+        data={filteredCategories}
+        columns={columns}
+        isLoading={isLoading}
+        height="flex-1"
+        currentPage={1}
+        totalPages={1}
+        emptyMessage="No categories found matching your search."
+      />
 
       {/* ── Add Category Modal ────────────────────────────────── */}
       <CustomModal
@@ -210,8 +290,6 @@ export default function AdminCategories() {
               onChange={(e) => setNewCat({ ...newCat, name: e.target.value })}
             />
           </div>
-
-
 
           <div className="space-y-2">
             <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Description</label>

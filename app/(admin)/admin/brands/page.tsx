@@ -3,19 +3,32 @@
 import React, { useState } from "react";
 import {
   Plus,
-  Search,
   CheckCircle2,
   AlertTriangle,
   Loader2,
   Store,
+  Edit3,
+  Trash2,
+  Eye,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { cn, getProxiedImageUrl, isPrivateIpImageUrl } from "@/lib/utils";
 import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from "@/lib/hooks/useBrands";
 import { useImageUpload } from "@/lib/hooks/useImageUpload";
 import { Brand } from "@/lib/services/brand-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
-import { AdminItemCard, AdminItemCardSkeleton } from "@/components/admin/AdminItemCard";
+import { DataTable, ColumnDef } from "@/components/common/DataTable";
+import {
+  DataTableFilterBar,
+  DataTableSearch,
+} from "@/components/common/DataTableFilters";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
 export default function AdminBrands() {
@@ -110,6 +123,97 @@ export default function AdminBrands() {
     setDeleteData(null);
   };
 
+  const columns: ColumnDef<Brand>[] = [
+    {
+      header: "Brand",
+      cell: (brand) => {
+        const logoUrl = typeof brand.logo === 'string' ? brand.logo : brand.logo?.url;
+        const proxyUrl = getProxiedImageUrl(logoUrl);
+        const isPrivateIp = isPrivateIpImageUrl(logoUrl);
+        
+        return (
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+              {proxyUrl ? (
+                <Image src={proxyUrl} alt={brand.name} width={48} height={48} unoptimized={isPrivateIp} className="w-full h-full object-cover" />
+              ) : (
+                <Store className="text-gray-300" size={20} />
+              )}
+            </div>
+            <div>
+              <h4 className="text-[14.5px] font-bold text-gray-900">{brand.name}</h4>
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider font-mono">ID: {brand.id?.slice(-8)}</p>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Description",
+      className: "max-w-[450px]",
+      cell: (brand) => {
+        const text = brand.description || "No description provided.";
+        const words = text.split(" ");
+        const isLong = words.length > 20;
+        const truncated = isLong ? words.slice(0, 20).join(" ") + "..." : text;
+
+        if (!isLong) return <p className="text-[14px] text-gray-600 italic leading-relaxed">{text}</p>;
+
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-[14px] text-gray-600 italic leading-relaxed cursor-help">
+                {truncated}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[300px] p-4 bg-white border-gray-100 shadow-xl rounded-xl text-[13.5px] font-medium text-gray-600 leading-relaxed italic animate-in fade-in zoom-in-95 duration-200">
+              {text}
+            </TooltipContent>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      header: "Created",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (brand) => (
+        <span className="text-[13px] font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100/50">
+          {brand.createdAt ? new Date(brand.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+        </span>
+      )
+    },
+    {
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (brand) => (
+        <div className="flex items-center justify-end gap-2">
+          <button className="p-2 text-gray-400 hover:bg-white hover:text-primary hover:shadow-md rounded-lg transition-all" title="View Brand Products">
+            <Eye size={18} />
+          </button>
+          <button
+            onClick={() => openEditModal(brand)}
+            className="p-2 text-gray-400 hover:bg-white hover:text-amber-500 hover:shadow-md rounded-lg transition-all"
+            title="Edit Brand"
+          >
+            <Edit3 size={18} />
+          </button>
+          <button
+            onClick={() => {
+              setDeleteData({ id: brand._id, name: brand.name });
+              setIsDeleteModalOpen(true);
+            }}
+            className="p-2 text-gray-400 hover:bg-white hover:text-rose-500 hover:shadow-md rounded-lg transition-all"
+            title="Delete Brand"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
   if (isError) {
     return (
       <div className="bg-rose-50 border border-rose-100 p-8 rounded-2xl text-center max-w-2xl mx-auto mt-10">
@@ -126,71 +230,42 @@ export default function AdminBrands() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="flex flex-col h-full space-y-4">
       {/* ── Page Header ───────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Product <span className="text-primary italic font-medium ml-1">Brands</span></h1>
-          <p className="text-[14px] text-gray-500 mt-1 font-medium italic">Manage the brands and manufacturers associated with your products.</p>
-        </div>
-        <Button
-          onClick={openAddModal}
-          className="flex items-center gap-2 bg-primary text-white hover:shadow-lg hover:shadow-primary/30 transition-all"
-        >
-          <Plus size={18} strokeWidth={2.5} />
-          Add Brand
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Product"
+        highlight="Brands"
+        description="Manage the manufacturers and brand names associated with your merchandise."
+        actions={
+          <Button
+            onClick={openAddModal}
+            className="flex items-center gap-2"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+            Add Brand
+          </Button>
+        }
+      />
 
-      {/* ── Search Bar ────────────────────────────────────────── */}
-      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
-        <div className="relative group max-w-md w-full">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
-          <input
-            type="text"
-            placeholder="Search brands..."
-            className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all text-[14px] font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="hidden md:flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-lg text-emerald-600 border border-emerald-100">
-          <Store size={16} />
-          <span className="text-[12px] font-bold uppercase tracking-wider">Total: {filteredBrands.length} Brands</span>
-        </div>
-      </div>
+      {/* ── Filter Bar ────────────────────────────────────────── */}
+      <DataTableFilterBar>
+        <DataTableSearch
+          placeholder="Search brands by name..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+      </DataTableFilterBar>
 
-      {/* ── Brands Grid ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <AdminItemCardSkeleton key={i} />)
-        ) : filteredBrands.length > 0 ? (
-          filteredBrands.map((brand) => (
-            <AdminItemCard
-              key={brand._id}
-              id={brand.id}
-              _id={brand._id}
-              name={brand.name}
-              imageUrl={typeof brand.logo === 'string' ? brand.logo : brand.logo?.url}
-              description={brand.description}
-              createdAt={brand.createdAt}
-              FallbackIcon={Store}
-              onEdit={() => openEditModal(brand)}
-              onDelete={() => {
-                setDeleteData({ id: brand._id, name: brand.name });
-                setIsDeleteModalOpen(true);
-              }}
-            />
-          ))
-        ) : (
-          <div className="lg:col-span-2 py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300">
-              <Search size={32} />
-            </div>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">No brands found matching your search</p>
-          </div>
-        )}
-      </div>
+      {/* ── Brands Table ──────────────────────────────────────── */}
+      <DataTable
+        data={filteredBrands}
+        columns={columns}
+        isLoading={isLoading}
+        height="flex-1"
+        currentPage={1}
+        totalPages={1}
+        emptyMessage="No brands found matching your search."
+      />
 
       {/* ── Add/Edit Brand Modal ──────────────────────────────── */}
       <CustomModal
@@ -219,7 +294,7 @@ export default function AdminBrands() {
             <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Description</label>
             <textarea
               required
-              placeholder="Describe this brand..."
+              placeholder="Describe this brand's history and focus..."
               rows={3}
               className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-4 px-6 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all font-bold text-gray-900 resize-none"
               value={newBrand.description}

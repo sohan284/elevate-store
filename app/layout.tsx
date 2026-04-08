@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Elevate Store",
 };
 
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,7 +28,9 @@ export default function RootLayout({
     >
       <body className="min-h-dvh flex flex-col font-sans selection:bg-primary/10 selection:text-primary">
         <Providers>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </Providers>
         <Toaster richColors position="bottom-right" />
       </body>

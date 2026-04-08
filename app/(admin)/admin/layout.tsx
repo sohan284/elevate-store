@@ -84,7 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ── Main Content Area ─────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-6 md:px-10 shrink-0 sticky top-0 z-30">
+        <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between p-5 md:p-6 lg:p-8 shrink-0 sticky top-0 z-30">
           <div className="flex items-center gap-6">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -125,9 +125,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Dynamic Page Content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-[#FBFBFC]">
+        <div className="flex-1 min-h-0 p-5 md:p-6 lg:p-8 bg-[#FBFBFC]">
           {children}
         </div>
+
       </main>
 
       {/* Mobile Overlay */}

@@ -3,11 +3,13 @@
 import React, { useState, useMemo } from "react";
 import {
   Plus,
-  Search,
   CheckCircle2,
   AlertTriangle,
   Loader2,
   Layers,
+  Edit3,
+  Trash2,
+  Eye,
 } from "lucide-react";
 import {
   Select,
@@ -16,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { cn, getProxiedImageUrl, isPrivateIpImageUrl } from "@/lib/utils";
 import {
   useSubcategories,
   useCreateSubcategory,
@@ -28,7 +31,17 @@ import { useImageUpload } from "@/lib/hooks/useImageUpload";
 import { Subcategory } from "@/lib/services/subcategory-service";
 import { CustomModal } from "@/components/common/CustomModal";
 import { Button } from "@/components/ui/button";
-import { AdminItemCard, AdminItemCardSkeleton } from "@/components/admin/AdminItemCard";
+import { DataTable, ColumnDef } from "@/components/common/DataTable";
+import {
+  DataTableFilterBar,
+  DataTableSearch,
+} from "@/components/common/DataTableFilters";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
 export default function AdminSubcategories() {
@@ -136,6 +149,110 @@ export default function AdminSubcategories() {
     setIsAddModalOpen(true);
   };
 
+  const columns: ColumnDef<Subcategory>[] = [
+    {
+      header: "Subcategory",
+      cell: (sub) => {
+        const subImageUrl = typeof sub.image === 'string' ? sub.image : sub.image?.url;
+        const proxyUrl = getProxiedImageUrl(subImageUrl);
+        const isPrivateIp = isPrivateIpImageUrl(subImageUrl);
+        
+        return (
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+              {proxyUrl ? (
+                <Image src={proxyUrl} alt={sub.name} width={48} height={48} unoptimized={isPrivateIp} className="w-full h-full object-cover" />
+              ) : (
+                <Layers className="text-gray-300" size={20} />
+              )}
+            </div>
+            <div>
+              <h4 className="text-[14.5px] font-bold text-gray-900">{sub.name}</h4>
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider font-mono">ID: {sub.id?.slice(-8)}</p>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Parent Category",
+      cell: (sub) => {
+        const parentCat = categories.find(c => c.id === sub.categoriesId);
+        return (
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-full bg-primary/5 text-primary text-[12px] font-bold border border-primary/10">
+              {parentCat?.name || "Uncategorized"}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Description",
+      className: "max-w-[350px]",
+      cell: (sub) => {
+        const text = sub.description || "No description provided.";
+        const words = text.split(" ");
+        const isLong = words.length > 20;
+        const truncated = isLong ? words.slice(0, 20).join(" ") + "..." : text;
+
+        if (!isLong) return <p className="text-[14px] text-gray-600 italic leading-relaxed">{text}</p>;
+
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-[14px] text-gray-600 italic leading-relaxed cursor-help">
+                {truncated}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[300px] p-4 bg-white border-gray-100 shadow-xl rounded-xl text-[13.5px] font-medium text-gray-600 leading-relaxed italic animate-in fade-in zoom-in-95 duration-200">
+              {text}
+            </TooltipContent>
+          </Tooltip>
+        );
+      }
+    },
+    {
+      header: "Created",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (sub) => (
+        <span className="text-[13px] font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100/50">
+          {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+        </span>
+      )
+    },
+    {
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (sub) => (
+        <div className="flex items-center justify-end gap-2">
+          <button className="p-2 text-gray-400 hover:bg-white hover:text-primary hover:shadow-md rounded-lg transition-all" title="View Details">
+            <Eye size={18} />
+          </button>
+          <button
+            onClick={() => openEditModal(sub)}
+            className="p-2 text-gray-400 hover:bg-white hover:text-amber-500 hover:shadow-md rounded-lg transition-all"
+            title="Edit Subcategory"
+          >
+            <Edit3 size={18} />
+          </button>
+          <button
+            onClick={() => {
+              setDeleteData({ id: sub._id, name: sub.name });
+              setIsDeleteModalOpen(true);
+            }}
+            className="p-2 text-gray-400 hover:bg-white hover:text-rose-500 hover:shadow-md rounded-lg transition-all"
+            title="Delete Subcategory"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
   if (isError) {
     return (
       <div className="bg-rose-50 border border-rose-100 p-8 rounded-2xl text-center max-w-2xl mx-auto mt-10">
@@ -152,73 +269,42 @@ export default function AdminSubcategories() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="flex flex-col h-full space-y-4">
       {/* ── Page Header ───────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Product <span className="text-primary italic font-medium ml-1">Subcategories</span></h1>
-          <p className="text-[14px] text-gray-500 mt-1 font-medium italic">Manage deeply nested groupings connected to your base Categories.</p>
-        </div>
-        <Button
-          onClick={openAddModal}
-          className="flex items-center gap-2"
-        >
-          <Plus size={18} strokeWidth={2.5} />
-          <span className="font-bold tracking-widest uppercase text-[12px]">Add Subcategory</span>
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Product"
+        highlight="Subcategories"
+        description="Manage deeply nested groupings connected to your base Categories."
+        actions={
+          <Button
+            onClick={openAddModal}
+            className="flex items-center gap-2"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+            Add Subcategory
+          </Button>
+        }
+      />
 
-      {/* ── Search Bar ────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-2 rounded-xl shadow-sm border border-gray-100/50">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search subcategories..."
-            className="w-full bg-[#F8F9FA] border border-gray-100 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/30 transition-all text-[14px] font-medium"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* ── Filter Bar ────────────────────────────────────────── */}
+      <DataTableFilterBar>
+        <DataTableSearch
+          placeholder="Search subcategories by name or description..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+      </DataTableFilterBar>
 
-      {/* ── Subcategories Grid ────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <AdminItemCardSkeleton key={i} />)
-        ) : filteredSubs.length > 0 ? (
-          filteredSubs.map((sub) => {
-            // Find parent category to display within the description dynamically!
-            const parentCat = categories.find(c => c._id === sub.categoriesId);
-            const formattedDesc = parentCat ? `Parent: ${parentCat.name} | ${sub.description}` : sub.description;
-
-            return (
-              <AdminItemCard
-                key={sub._id}
-                id={sub.id}
-                _id={sub._id}
-                name={sub.name}
-                imageUrl={typeof sub.image === 'string' ? sub.image : sub.image?.url}
-                description={formattedDesc}
-                createdAt={sub.createdAt}
-                FallbackIcon={Layers}
-                onEdit={() => openEditModal(sub)}
-                onDelete={() => {
-                  setDeleteData({ id: sub._id, name: sub.name });
-                  setIsDeleteModalOpen(true);
-                }}
-              />
-            );
-          })
-        ) : (
-          <div className="lg:col-span-2 xl:col-span-3 py-20 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300">
-              <Search size={32} />
-            </div>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">No subcategories found matching your search</p>
-          </div>
-        )}
-      </div>
+      {/* ── Subcategories Table ────────────────────────────────── */}
+      <DataTable
+        data={filteredSubs}
+        columns={columns}
+        isLoading={isLoading}
+        height="flex-1"
+        currentPage={1}
+        totalPages={1}
+        emptyMessage="No subcategories found matching your search."
+      />
 
       {/* ── Add/Edit Modal (With Dropdown!) ───────────────────── */}
       <CustomModal
@@ -228,6 +314,7 @@ export default function AdminSubcategories() {
           resetForm();
         }}
         title={editingSubcategory ? "Edit Subcategory" : "Add New Subcategory"}
+        maxWidth="max-w-4xl"
       >
         <form onSubmit={handleAddSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -265,8 +352,6 @@ export default function AdminSubcategories() {
               />
             </div>
           </div>
-
-
 
           <div className="space-y-2">
             <label className="text-[13px] font-black text-gray-400 uppercase tracking-widest pl-1">Description</label>
@@ -315,6 +400,8 @@ export default function AdminSubcategories() {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         title="Confirm Deletion"
+        variant="danger"
+        maxWidth="max-w-md"
       >
         <div className="space-y-6">
           <div className="bg-rose-50 text-rose-600 p-4 rounded-xl flex items-start gap-4">
