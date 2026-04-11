@@ -6,9 +6,12 @@ import Image from "next/image";
 import { Search, MapPin, User, Heart, ShoppingCart, Menu } from "lucide-react";
 import MobileMenu from "@/components/common/MobileMenu";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useAuthStore } from "@/lib/store/auth-store";
+import UserMenu from "@/components/common/UserMenu";
 
 export default function Navbar() {
   const { items, toggleDrawer } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -56,10 +59,14 @@ export default function Navbar() {
               <span className="text-[10px] sm:text-[12px] font-medium hidden sm:block">Track Order</span>
             </button>
 
-            <Link href="/signin" className="hidden sm:flex flex-col items-center gap-1.5 text-gray-800 hover:text-primary group transition-all duration-300">
-              <User size={24} strokeWidth={1.5} className="group-hover:text-primary group-hover:-translate-y-0.5 transition-transform sm:w-[26px] sm:h-[26px]" />
-              <span className="text-[10px] sm:text-[12px] font-medium hidden sm:block">Sign In</span>
-            </Link>
+            {mounted && isAuthenticated ? (
+              <UserMenu />
+            ) : (
+              <Link href="/signin" className="hidden sm:flex flex-col items-center gap-1.5 text-gray-800 hover:text-primary group transition-all duration-300">
+                <User size={24} strokeWidth={1.5} className="group-hover:text-primary group-hover:-translate-y-0.5 transition-transform sm:w-[26px] sm:h-[26px]" />
+                <span className="text-[10px] sm:text-[12px] font-medium hidden sm:block">Sign In</span>
+              </Link>
+            )}
 
             <button className="hidden md:flex flex-col items-center gap-1.5 text-gray-800 hover:text-primary group transition-all duration-300">
               <Heart size={24} strokeWidth={1.5} className="group-hover:text-primary group-hover:-translate-y-0.5 transition-transform sm:w-[26px] sm:h-[26px]" />

@@ -10,7 +10,7 @@ interface AuthState {
   
   // Actions
   setCredentials: (user: User, token: string) => void;
-  logout: () => void;
+  logout: (isBroadcast?: boolean) => void;
   updateUser: (user: Partial<User>) => void;
 }
 
@@ -27,19 +27,44 @@ export const useAuthStore = create<AuthState>()(
         set({ user, token, isAuthenticated: true });
       },
 
-      logout: () => {
+      logout: (isBroadcast = false) => {
         cookies.remove("elevate_token");
         set({ user: null, token: null, isAuthenticated: false });
+
+        // Broadcast to other tabs to logout instantly
+        if (!isBroadcast && typeof window !== "undefined") {
+          const authChannel = new BroadcastChannel("elevate_auth_channel");
+          authChannel.postMessage("LOGOUT");
+          authChannel.close();
+        }
       },
 
-      updateUser: (userData) => set((state) => ({
-        user: state.user ? { ...state.user, ...userData } : null
-      })),
+      updateUser: (userData) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : null,
+        })),
     }),
     {
       name: "elevate-auth-storage",
-      // Only persist the user object, token is handled by cookies separately for interceptors
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
+
+// Global Listener for cross-tab synchronization
+if (typeof window !== "undefined") {
+  const authChannel = new BroadcastChannel("elevate_auth_channel");
+  authChannel.onmessage = (event) => {
+    if (event.data === "LOGOUT") {
+      useAuthStore.getState().logout(true); // pass true to avoid infinite loops
+      // Optional: redirect to signin
+      if (!window.location.pathname.includes("/signin")) {
+        window.location.href =
+          "/signin?message=Logged out successfuly.";
+      }
+    }
+  };
+}
