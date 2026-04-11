@@ -323,7 +323,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
           {/* Active filter chips */}
           {activeFilterCount > 0 && (
-            <button onClick={() => { setSelectedSubs([]); setSelectedBrands([]); setBestSellingOnly(false); setAppliedMin(null); setAppliedMax(null); setMinPrice(""); setMaxPrice(""); }} className="hidden lg:flex items-center gap-1 text-[12px] text-red-500 hover:text-red-700 font-medium transition-colors">
+            <button onClick={() => { setSelectedSubs([]); setSelectedBrands([]); setBestSellingOnly(false); setAppliedMin(null); setAppliedMax(null); setMinPrice(""); setMaxPrice(""); }} className="hidden lg:flex items-center gap-1 text-[12px] text-red-800 hover:text-red-700 font-medium transition-colors">
               <X size={12} /> Clear all ({activeFilterCount})
             </button>
           )}

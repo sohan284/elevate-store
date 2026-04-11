@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import Providers from "@/components/providers/Providers";
+import { Toaster } from "sonner";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -12,6 +14,8 @@ export const metadata: Metadata = {
   description: "Elevate Store",
 };
 
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,8 +26,13 @@ export default function RootLayout({
       lang="en"
       className={`${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-[100dvh] flex flex-col font-sans selection:bg-primary/10 selection:text-primary">
-        {children}
+      <body className="min-h-dvh flex flex-col font-sans selection:bg-primary/10 selection:text-primary">
+        <Providers>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </Providers>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );

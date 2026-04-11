@@ -130,7 +130,7 @@ export default function CheckoutPage() {
                           <span className="text-[14px] font-bold text-[#3b4148]">৳{(item.price * item.quantity).toLocaleString()}.00</span>
                         </div>
                       </div>
-                      <button onClick={() => removeItem(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white">
+                      <button onClick={() => removeItem(item.id)} className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-800 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-800 hover:text-white">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -171,7 +171,7 @@ export default function CheckoutPage() {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-xl overflow-hidden border-gray-100" align="start">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-lg overflow-hidden border-gray-100" align="start">
                       <Command className="w-full border-none">
                         <CommandInput placeholder="Search district..." className="h-10 border-none focus:ring-0" />
                         <CommandList className="max-h-[300px]">
@@ -222,7 +222,7 @@ export default function CheckoutPage() {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-xl overflow-hidden border-gray-100" align="start">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-lg overflow-hidden border-gray-100" align="start">
                       <Command className="w-full border-none">
                         <CommandInput placeholder="Search thana..." className="h-10 border-none focus:ring-0" />
                         <CommandList className="max-h-[300px]">
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-xl overflow-hidden border-gray-100" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-lg overflow-hidden border-gray-100" align="start">
                         <Command className="w-full border-none">
                           <CommandInput placeholder="Search district..." className="h-10 border-none focus:ring-0" />
                           <CommandList className="max-h-[200px]">
@@ -350,7 +350,7 @@ export default function CheckoutPage() {
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-xl overflow-hidden border-gray-100" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-lg rounded-lg overflow-hidden border-gray-100" align="start">
                         <Command className="w-full border-none">
                           <CommandInput placeholder="Search thana..." className="h-10 border-none focus:ring-0" />
                           <CommandList className="max-h-[200px]">
