@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   User,
   Lock,
@@ -17,11 +18,24 @@ import {
 } from "lucide-react";
 import { useRegister } from "@/lib/hooks/useAuth";
 import { RegisterInput } from "@/lib/services/auth-service";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  // 🛡️ EXPERT GUARD: Redirect logged-in users away from registration
+  useEffect(() => {
+    setIsMounted(true);
+    if (isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
 
   // CLEANUP: Revoke the object URL when the component unmounts to prevent memory leaks
   useEffect(() => {
@@ -33,6 +47,9 @@ export default function RegisterPage() {
   }, [imagePreview]);
 
   const { mutate: register, isPending } = useRegister();
+  
+  // Prevent Hydration Flash
+  if (!isMounted) return null;
 
   const [formData, setFormData] = useState<RegisterInput>({
     firstName: "",

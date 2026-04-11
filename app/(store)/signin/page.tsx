@@ -1,11 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, Lock, Eye, EyeOff, Smartphone, KeyRound } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { User, Lock, Eye, EyeOff, Smartphone, KeyRound, Loader2 } from "lucide-react";
+import { useLogin } from "@/lib/hooks/useAuth";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { toast } from "sonner";
 
 export default function SigninPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isMounted, setIsMounted] = useState(false); // Hydration safety
+  
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const searchParams = useSearchParams();
+  const sessionMessage = searchParams.get("message");
+
+  const { mutate: login, isPending } = useLogin();
+
+  // 🛡️ EXPERT GUARD: Redirect logged-in users away from sign-in
+  useEffect(() => {
+    setIsMounted(true);
+    if (isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
+
+  useEffect(() => {
+    if (sessionMessage) {
+      const timer = setTimeout(() => {
+        toast.info("Session Notice", { description: sessionMessage });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionMessage]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error("Missing Credentials", { description: "Please enter both email and password." });
+      return;
+    }
+    login({ email, password });
+  };
+
+  // Prevent Hydration Flash
+  if (!isMounted) return null;
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-transparent">
@@ -30,7 +73,7 @@ export default function SigninPage() {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-0 relative z-10">
 
           {/* Left Column -> OTP */}
-          <div className="flex-1 bg-[#F9FAFB] rounded-[14px] p-6 lg:p-8 lg:pr-14">
+          <div className="flex-1 bg-[#F9FAFB] rounded-[14px] p-6 lg:p-8 lg:pr-14 flex flex-col">
             <h3 className="font-semibold text-[#2D333A] text-[15px] mb-6">Login With Mobile Number</h3>
 
             <div className="mb-6 relative">
@@ -44,9 +87,11 @@ export default function SigninPage() {
               />
             </div>
 
-            <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-[8px] transition-colors shadow-sm text-[15px]">
-              Send OTP
-            </button>
+            <div className="mt-auto pt-6 lg:pt-0">
+              <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-[8px] transition-colors shadow-sm text-[15px]">
+                Send OTP
+              </button>
+            </div>
           </div>
 
           {/* Central Divider Node (Desktop) */}
@@ -66,7 +111,7 @@ export default function SigninPage() {
           </div>
 
           {/* Right Column -> Credentials */}
-          <div className="flex-1 bg-[#F9FAFB] rounded-[14px] p-6 lg:p-8 lg:pl-14">
+          <form onSubmit={handleSubmit} className="flex-1 bg-[#F9FAFB] rounded-[14px] p-6 lg:p-8 lg:pl-14">
             <h3 className="font-semibold text-[#2D333A] text-[15px] mb-6">Login With Credentials</h3>
 
             <div className="space-y-5 mb-5">
@@ -76,6 +121,9 @@ export default function SigninPage() {
                 </div>
                 <input
                   type="text"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email or phone number"
                   className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-[15px]"
                 />
@@ -87,6 +135,9 @@ export default function SigninPage() {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   className="w-full pl-11 pr-12 py-3.5 bg-white border border-gray-200 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-[15px] tracking-wide"
                 />
@@ -113,10 +164,14 @@ export default function SigninPage() {
               </Link>
             </div>
 
-            <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-[8px] transition-colors shadow-sm text-[15px]">
-              Login
+            <button 
+              type="submit"
+              disabled={isPending}
+              className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-[8px] transition-colors shadow-sm text-[15px] flex items-center justify-center gap-2"
+            >
+              {isPending ? <Loader2 className="animate-spin" size={18} /> : "Login"}
             </button>
-          </div>
+          </form>
 
         </div>
 
@@ -131,7 +186,7 @@ export default function SigninPage() {
             </div>
           </div>
 
-          <button className="w-[50px] h-[50px] rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors mb-10 shadow-sm hover:shadow-md">
+          <button type="button" className="w-[50px] h-[50px] rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors mb-10 shadow-sm hover:shadow-md">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="22px" height="22px">
               <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
               <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />

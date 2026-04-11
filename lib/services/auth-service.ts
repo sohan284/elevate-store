@@ -72,4 +72,12 @@ export const authService = {
     });
     return response.data;
   },
+
+  login: async (email: string, password: string) => {
+    const response = await apiClient.post<ApiResponse<LoginResponse>>("/auth/login", {
+      email,
+      password,
+    });
+    return response.data;
+  },
 };

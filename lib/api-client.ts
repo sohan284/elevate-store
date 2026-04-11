@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "sonner";
+import { cookies } from "./utils";
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -7,7 +8,6 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-// ── Define your Base URL here (ONE TIME ONLY) ─────────────────────────
 const BASE_URL = "/api-proxy";
 
 export const apiClient = axios.create({
@@ -15,10 +15,10 @@ export const apiClient = axios.create({
   headers: {},
 });
 
-// ── Request Interceptor (Auth, Logging) ─────────────────────────────
 apiClient.interceptors.request.use(
   (config) => {
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJjMDIzYjFhLWFhMTMtNDBhZS1hYTkxLTg5YjhhMWJjZTRjYSIsImVtYWlsIjoiYWx0YWoxMDE5QGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NTI4NTYxNn0.g6SSHxPdSkn1cEhYAHSUBd7rP9BBYjSZcP8fxxWFh5I";
+    // Read from cookies (Secure, Experts choice)
+    const token = cookies.get("elevate_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,16 +27,24 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response Interceptor (Global Error Handling) ─────────────────────
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    const status = error.response?.status;
     const message = error.response?.data?.message || error.message || "An unexpected error occurred";
     
-    // Global toast for errors
-    toast.error("API Error", {
-      description: message,
-    });
+    // Auto-logout if token is expired or invalid
+    if (status === 401) {
+      cookies.remove("elevate_token");
+      // Use window.location for a hard refresh to clear all app state on logout
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/signin')) {
+        window.location.href = "/signin?message=Session expired. Please login again.";
+      }
+    } else {
+      toast.error("API Error", {
+        description: message,
+      });
+    }
 
     return Promise.reject(error);
   }
